@@ -200,7 +200,7 @@ namespace Garnet {
             if (it == componentArray.end()) {
                 return false;
             }
-            return true;
+            return std::any_cast<ComponentPool<T>&>(it->second).contains(entity);
         }
 
         /**
