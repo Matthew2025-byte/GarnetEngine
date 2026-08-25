@@ -32,6 +32,8 @@ class RenderSystem {
         renderer(renderer), textureManager(manager) {}
     
     void update(Garnet::Registry& registry) {
+        SDL_RenderClear(renderer);
+        
         registry.each<Garnet::TextureID, Garnet::Components::Transform>([&](const Garnet::Entity entity, Garnet::TextureID texture, const Garnet::Components::Transform& transform) {
             RenderTexture(this->renderer, transform, texture);
         });
