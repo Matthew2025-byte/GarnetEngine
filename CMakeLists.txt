@@ -21,6 +21,9 @@ find_package(SDL3_ttf CONFIG REQUIRED)
 # Add .cpp files
 add_library(GarnetEngine SHARED
     src/vec2.cpp
+    src/FontManager.cpp
+    src/TextureManager.cpp
+    src/Renderer.cpp
 )
 
 # Set include directories
