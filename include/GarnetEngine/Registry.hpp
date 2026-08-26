@@ -158,12 +158,6 @@ namespace Garnet {
          *         of type T.
          *
          * @note T must be default-constructible.
-         *
-         * @example
-         * struct PlayerTag {};
-         *
-         * Entity player = registry.createEntity();
-         * registry.addComponent<PlayerTag>(player);
          */
         template<typename T>
         void addComponent(Entity entity)
