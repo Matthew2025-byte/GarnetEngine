@@ -1,0 +1,41 @@
+name: Deploy Doxygen to Github Pages
+on:
+    push:
+        branches: [main]
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+
+jobs:
+    deploy:
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        runs-on: ubuntu-latest
+        steps:
+        - name: "Checkout Code"
+          uses: actions/checkout@v4
+
+        - name: "Fetch Doxygen Awesome CSS Theme"
+          run: git clone --depth 1 https://github.com doxygen-awesome-css
+
+        - name: "Install Doxygen"
+          run: |
+            sudo apt-get update
+            sudo apt install -y doxygen
+        
+        - name: "Run Doxygen"
+          run: doxygen Doxyfile
+
+        - name: "Bypass  Jekyll Engine"
+          run: touch docs/html/.nojekyll
+        
+        - name: "Upload Website Artifacts"
+          uses: actions/upload-pages-artifact@v3
+          with:
+            path: "docs/html"
+        
+        - name: "Deploy to Github Pages"
+          id: deployment
+          uses: actions/deploy-pages@v4
