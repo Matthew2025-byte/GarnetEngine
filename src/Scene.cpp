@@ -7,5 +7,7 @@ void Garnet::Scene::save(const std::string& path) const {
 }
 
 void Garnet::Scene::update(float dt) {
-    return;
+    for (auto& call : callbacks) {
+        call(dt);
+    }
 }
