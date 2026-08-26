@@ -8,6 +8,7 @@
 #include "FontManager.hpp"
 #include "Registry.hpp"
 #include "Renderer.hpp"
+#include "Scene.hpp"
 #include "TextureManager.hpp"
 #include "vec2.hpp"
 
