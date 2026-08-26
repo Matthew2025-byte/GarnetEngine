@@ -1,7 +1,9 @@
 name: Deploy Doxygen to Github Pages
 on:
     push:
-        branches: [main]
+        branches:
+            - main
+            - Doxygen-Implementation
 permissions:
     contents: read
     pages: write
