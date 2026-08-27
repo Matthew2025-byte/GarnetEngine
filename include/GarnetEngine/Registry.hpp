@@ -239,12 +239,11 @@ namespace Garnet {
          * @tparam Components Additional components for filtering
          * @param func callback run on the entities in the filter
          * 
-         * @example
-         * registry.each<Transform, Velocity>([](Entity entity,
-         *                                       Transform& transform,
-         *                                       Velocity& velocity) {
-         *     transform.position += velocity.value;
-         * });
+         * @code
+        registry.each<Transform, Velocity>([](Entity entity, Transform& transform, Velocity& velocity) {
+            transform += velocity;
+        });
+         * @endcode
          */
         template<typename Primary, typename... Components, typename Func>
         void each(Func&& func) {
