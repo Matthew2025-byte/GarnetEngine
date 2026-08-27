@@ -6,9 +6,11 @@ namespace Garnet {
     class Scene {
     public:
         /**
-         * @brief 
+         * @brief Runs all bound methods
+         * 
+         * @param dt deltaTime for physics updates
          */
-        void update(float dt); // forwards to all bound methods
+        void update(float dt);
         void save(const std::string& path) const;
         
         /**
