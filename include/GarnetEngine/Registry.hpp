@@ -103,7 +103,7 @@ namespace Garnet {
 
     class Registry {
         std::unordered_map<std::type_index, std::any> componentArray;
-        std::vector<std::function<void(Entity)>> componentRemovers; 
+        std::vector<std::function<void(Registry&, Entity)>> componentRemovers; 
         Entity entityIndex = 0;
 
         public:
@@ -135,8 +135,8 @@ namespace Garnet {
 
             if (it == componentArray.end()) {
                 componentArray[typeid(T)] = ComponentPool<T>();
-                componentRemovers.push_back([this](Entity entity) {
-                    getComponents<T>().remove(entity);
+                componentRemovers.push_back([](Entity entity, Registry& registry) {
+                    registry.getComponents<T>().remove(entity);
                 });
             }
             getComponents<T>().add(entity, component);
@@ -228,7 +228,7 @@ namespace Garnet {
          */
         void removeEntity(Entity entity) {
             for (auto& remove : this->componentRemovers) {
-                remove(entity);
+                remove(*this, entity);
             }
         }
     
