@@ -2,3 +2,6 @@
 /bin
 /docs
 CmakeUserPresets.json
+.vs/
+*.user
+*.suo
