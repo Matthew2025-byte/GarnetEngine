@@ -7,11 +7,15 @@
 #include <stdexcept>
 #include <functional>
 #include <limits>
+#include <tuple>
+#include <algorithm>
 
 
 namespace Garnet {
     using Entity = uint32_t;
 
+    template <typename T>
+    struct TypeTag { using type = T; };
     // Component Pool
     /**
      * @brief relationship between entities and components
@@ -85,6 +89,15 @@ namespace Garnet {
                 }
             }
             throw std::runtime_error("Entity does not have this component");
+        }
+
+        /**
+         * @brief Get the size of the pool
+         * 
+         * @return Integer value representing the number of valid entities
+         */
+        size_t size() {
+            return entities.size();
         }
     
         /**
@@ -230,6 +243,71 @@ namespace Garnet {
             for (auto& remove : this->componentRemovers) {
                 remove(*this, entity);
             }
+        }
+
+        /**
+         * @brief Finds the smallest available component pool
+         * 
+         * @tparam Components Component pools to check
+         * @return Smallest pool available
+         */
+        template <typename... Components>
+        std::type_index findSmallestPool() {
+            static_assert(sizeof...(Components) > 0, "Must have at least one type");
+
+            std::type_index smallest_type = typeid(void); 
+            int smallest_size = std::numeric_limits<int>::max(); // Matches your int return type
+
+            auto check_smallest = [&](auto tag) {
+                using Component = typename decltype(tag)::type;
+                
+                int currentSize = this->template getComponents<Component>().size(); 
+                
+                if (currentSize < smallest_size) {
+                    smallest_size = currentSize;
+                    smallest_type = typeid(Component);
+                }
+            };
+
+            (check_smallest(TypeTag<Components>{}), ...);
+
+            return smallest_type; 
+        }
+
+        /**
+         * @brief Sorts pools from smallest to biggest
+         * 
+         * Creates a vector of the provided components ordered smallest to largest
+         * based on the number of entities each contains
+         * 
+         * @tparam Components Components to check
+         * @return A vector of the given components ordered smallest to largest
+         */
+        template <typename... Components>
+        std::vector<std::type_index> sortPools() {
+            static_assert(sizeof...(Components) > 0, "Must have at least once type");
+
+            std::vector<std::pair<std::type_index, size_t>> pools;
+            pools.reserve(sizeof...(Components));
+
+            auto collect = [&](auto tag) {
+                using Component = typename decltype(tag)::type;
+                size_t size = this->template getComponents<Component>().size();
+                pools.emplace_back(typeid(Component), size);
+            };
+
+            (collect(TypeTag<Components>{}), ...);
+
+            std::sort(pools.begin(), pools.end(), 
+                [](const auto& a, const auto& b) { return a.second < b.second; });
+
+            std::vector<std::type_index> result;
+            result.reserve(pools.size());
+            for (auto& [type, size] : pools) {
+                result.push_back(type);
+            }
+
+            return result;
         }
     
         /**

@@ -1,5 +1,5 @@
 find_package(doctest CONFIG REQUIRED)
 
-add_executable(run_all_tests test_main.cpp)
+add_executable(run_all_tests test_main.cpp test.cpp)
 target_link_libraries(run_all_tests PRIVATE GarnetEngine doctest::doctest)
 add_test(NAME tests COMMAND run_all_tests)

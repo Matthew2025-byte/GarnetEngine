@@ -15,7 +15,7 @@
 namespace Garnet {
 /**
  * @brief Struct containing communication information betwen render and update threads
- * Automatically manages its own memory
+ * Automatically destroys contained members
  *
  */
 struct ThreadData {

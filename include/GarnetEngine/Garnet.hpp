@@ -9,7 +9,7 @@
 #include "Registry.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
-#include "sceneManager.hpp"
+#include "SceneManager.hpp"
 #include "TextureManager.hpp"
 #include "vec2.hpp"
 
