@@ -40,3 +40,10 @@ target_link_libraries(GarnetEngine PRIVATE
     SDL3_image::SDL3_image
     SDL3_ttf::SDL3_ttf
 )
+
+option(BUILD_TESTING "Build the testing suite" ON)
+
+if (BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
