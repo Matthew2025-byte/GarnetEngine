@@ -135,7 +135,7 @@ namespace Garnet {
 
             if (it == componentArray.end()) {
                 componentArray[typeid(T)] = ComponentPool<T>();
-                componentRemovers.push_back([](Entity entity, Registry& registry) {
+                componentRemovers.push_back([](Registry& registry, Entity entity) {
                     registry.getComponents<T>().remove(entity);
                 });
             }
