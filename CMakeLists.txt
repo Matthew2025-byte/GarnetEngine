@@ -25,6 +25,7 @@ add_library(GarnetEngine SHARED
     src/TextureManager.cpp
     src/Renderer.cpp
     src/Scene.cpp
+    src/sceneManager.cpp
 )
 
 # Set include directories
