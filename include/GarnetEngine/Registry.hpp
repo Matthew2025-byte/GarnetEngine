@@ -1,3 +1,11 @@
+/**
+ * @file Registry.hpp
+ * @author Matthew2025-byte
+ * @brief Contains Registry, Garnets ECS controller
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
 #pragma once
 #include <unordered_map>
 #include <typeindex>

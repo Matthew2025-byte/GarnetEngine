@@ -1,6 +1,6 @@
 /**
  * @file Scene.hpp
- * @author Matthew 5-byte
+ * @author Matthew2025-byte
  * @brief Contains Class Scene for coordinating level specific assets and logic
  *
  */

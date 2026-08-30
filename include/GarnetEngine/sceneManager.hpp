@@ -1,6 +1,6 @@
 /**
  * @file Engine.hpp
- * @author Matthew 5-byte
+ * @author Matthew2025-byte
  * @brief Declaration of Garnet::Engine
  *
  */
