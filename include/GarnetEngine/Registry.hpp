@@ -107,6 +107,13 @@ namespace Garnet {
         size_t size() {
             return entities.size();
         }
+
+        /**
+         * @brief Get the Entities object
+         * 
+         * @return std::vector<Entity> 
+         */
+        std::vector<Entity> getEntities() { return entities; }
     
         /**
          * @brief Executes a provided method on all entries in the component pool
@@ -200,6 +207,28 @@ namespace Garnet {
                 throw std::runtime_error("Pool does not exist");
             }
             return std::any_cast<ComponentPool<T>&>(it->second);
+        }
+
+        /**
+         * @brief Get all entities that match the given component filter
+         * 
+         * @tparam Components Components to filter from
+         * @return Vector of entities that match the filter
+         */
+        template <typename... Components>
+        std::vector<Entity> getEntities() {
+            static_assert(sizeof...(Components) > 0, "Need at least one component type");
+
+            using Primary = std::tuple_element_t<0, std::tuple<Components...>>;
+
+            std::vector<Entity> entities;
+            ComponentPool<Primary>& pool = getComponents<Primary>();
+            for (auto& entity : pool.getEntities()) {
+                if ((hasComponent<Components>(entity) && ...)) {
+                    entities.push_back(entity);
+                }
+            }
+            return entities;
         }
     
         /**
