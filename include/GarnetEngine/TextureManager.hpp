@@ -1,3 +1,11 @@
+/**
+ * @file TextureManager.hpp
+ * @author Matthew2025-byte
+ * @brief Contains TextureManager
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
 #pragma once
 #include <unordered_map>
 #include <vector>
@@ -7,6 +15,10 @@
 #include <filesystem>
 
 namespace Garnet {
+    /**
+     * @brief Texture component for rendering
+     * 
+     */
     struct TextureID {
         uint32_t index = 0;
 

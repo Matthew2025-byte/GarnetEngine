@@ -1,3 +1,11 @@
+/**
+ * @file Registry.hpp
+ * @author Matthew2025-byte
+ * @brief Contains Registry, Garnets ECS controller
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
 #pragma once
 #include <unordered_map>
 #include <typeindex>
@@ -7,11 +15,15 @@
 #include <stdexcept>
 #include <functional>
 #include <limits>
+#include <tuple>
+#include <algorithm>
 
 
 namespace Garnet {
     using Entity = uint32_t;
 
+    template <typename T>
+    struct TypeTag { using type = T; };
     // Component Pool
     /**
      * @brief relationship between entities and components
@@ -86,6 +98,22 @@ namespace Garnet {
             }
             throw std::runtime_error("Entity does not have this component");
         }
+
+        /**
+         * @brief Get the size of the pool
+         * 
+         * @return Integer value representing the number of valid entities
+         */
+        size_t size() {
+            return entities.size();
+        }
+
+        /**
+         * @brief Get the Entities object
+         * 
+         * @return std::vector<Entity> 
+         */
+        std::vector<Entity> getEntities() { return entities; }
     
         /**
          * @brief Executes a provided method on all entries in the component pool
@@ -103,7 +131,7 @@ namespace Garnet {
 
     class Registry {
         std::unordered_map<std::type_index, std::any> componentArray;
-        std::vector<std::function<void(Entity)>> componentRemovers; 
+        std::vector<std::function<void(Registry&, Entity)>> componentRemovers; 
         Entity entityIndex = 0;
 
         public:
@@ -135,8 +163,8 @@ namespace Garnet {
 
             if (it == componentArray.end()) {
                 componentArray[typeid(T)] = ComponentPool<T>();
-                componentRemovers.push_back([this](Entity entity) {
-                    getComponents<T>().remove(entity);
+                componentRemovers.push_back([](Registry& registry, Entity entity) {
+                    registry.getComponents<T>().remove(entity);
                 });
             }
             getComponents<T>().add(entity, component);
@@ -179,6 +207,28 @@ namespace Garnet {
                 throw std::runtime_error("Pool does not exist");
             }
             return std::any_cast<ComponentPool<T>&>(it->second);
+        }
+
+        /**
+         * @brief Get all entities that match the given component filter
+         * 
+         * @tparam Components Components to filter from
+         * @return Vector of entities that match the filter
+         */
+        template <typename... Components>
+        std::vector<Entity> getEntities() {
+            static_assert(sizeof...(Components) > 0, "Need at least one component type");
+
+            using Primary = std::tuple_element_t<0, std::tuple<Components...>>;
+
+            std::vector<Entity> entities;
+            ComponentPool<Primary>& pool = getComponents<Primary>();
+            for (auto& entity : pool.getEntities()) {
+                if ((hasComponent<Components>(entity) && ...)) {
+                    entities.push_back(entity);
+                }
+            }
+            return entities;
         }
     
         /**
@@ -228,8 +278,73 @@ namespace Garnet {
          */
         void removeEntity(Entity entity) {
             for (auto& remove : this->componentRemovers) {
-                remove(entity);
+                remove(*this, entity);
             }
+        }
+
+        /**
+         * @brief Finds the smallest available component pool
+         * 
+         * @tparam Components Component pools to check
+         * @return Smallest pool available
+         */
+        template <typename... Components>
+        std::type_index findSmallestPool() {
+            static_assert(sizeof...(Components) > 0, "Must have at least one type");
+
+            std::type_index smallest_type = typeid(void); 
+            int smallest_size = std::numeric_limits<int>::max(); // Matches your int return type
+
+            auto check_smallest = [&](auto tag) {
+                using Component = typename decltype(tag)::type;
+                
+                int currentSize = this->template getComponents<Component>().size(); 
+                
+                if (currentSize < smallest_size) {
+                    smallest_size = currentSize;
+                    smallest_type = typeid(Component);
+                }
+            };
+
+            (check_smallest(TypeTag<Components>{}), ...);
+
+            return smallest_type; 
+        }
+
+        /**
+         * @brief Sorts pools from smallest to biggest
+         * 
+         * Creates a vector of the provided components ordered smallest to largest
+         * based on the number of entities each contains
+         * 
+         * @tparam Components Components to check
+         * @return A vector of the given components ordered smallest to largest
+         */
+        template <typename... Components>
+        std::vector<std::type_index> sortPools() {
+            static_assert(sizeof...(Components) > 0, "Must have at least once type");
+
+            std::vector<std::pair<std::type_index, size_t>> pools;
+            pools.reserve(sizeof...(Components));
+
+            auto collect = [&](auto tag) {
+                using Component = typename decltype(tag)::type;
+                size_t size = this->template getComponents<Component>().size();
+                pools.emplace_back(typeid(Component), size);
+            };
+
+            (collect(TypeTag<Components>{}), ...);
+
+            std::sort(pools.begin(), pools.end(), 
+                [](const auto& a, const auto& b) { return a.second < b.second; });
+
+            std::vector<std::type_index> result;
+            result.reserve(pools.size());
+            for (auto& [type, size] : pools) {
+                result.push_back(type);
+            }
+
+            return result;
         }
     
         /**
