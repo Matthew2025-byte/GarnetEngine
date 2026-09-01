@@ -92,9 +92,11 @@ class CollisionSystem {
 	 * @param dt Frame delta time.
 	 * @param scene Scene being updated.
 	 */
-	static void Update(float dt, Registry& registry) {
-		registry.each<Components::Transform, Components::Collider>(Entity a, Components::Transform & transformA, Components::Collider & colliderA {
-			registry.each<Components::Transform, Components::Collider>(Entity b, Components::Transform & transformB, Components::Collider & colliderB {
+	static void Update(float dt, Registry& registry, const std::vector<Entity>& entities) {
+		registry.each<Components::Transform, Components::Collider>(
+            [&](Entity a, Components::Transform & transformA, Components::Collider & colliderA) {
+			registry.each<Components::Transform, Components::Collider>(
+                [&](Entity b, Components::Transform & transformB, Components::Collider & colliderB) {
                 if (a >= b) { return; }
 
 				Collision collision =
