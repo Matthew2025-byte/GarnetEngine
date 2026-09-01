@@ -1,7 +1,8 @@
 #pragma once
 #include "Registry.hpp"
 #include "Renderer.hpp"
-
+#include <functional>
+#include <vector>
 namespace Garnet {
     class Scene {
     public:
@@ -26,6 +27,23 @@ namespace Garnet {
             });
         }
 
+        /**
+         * @brief Binds a scene-wide system.
+         *
+         * Intended for systems that need access to the entire
+         * scene or registry rather than individual entities.
+         *
+         * @param func Function matching (float dt, Scene&).
+         */
+        void bindSystem(void (*func)(float, Scene&))
+        {
+            callbacks.emplace_back(
+                [this, func](float dt)
+                {
+                    func(dt, *this);
+                }
+            );
+        }
 
         /**
          * @brief Adds an Entity/Component pair to a Component Pool
