@@ -78,7 +78,7 @@ class CollisionSystem {
 	 * CollisionSystem::Init(scene);
 	 * @endcode
 	 */
-	static void Init(Scene& scene) { scene.bindSystem(Update); }
+	static void Init(Scene& scene) { scene.bindSystem<Components::Transform, Components::Collider>(Update); }
 
 	private:
 	/**
@@ -93,10 +93,13 @@ class CollisionSystem {
 	 * @param scene Scene being updated.
 	 */
 	static void Update(float dt, Registry& registry, const std::vector<Entity>& entities) {
-		registry.each<Components::Transform, Components::Collider>(
-            [&](Entity a, Components::Transform & transformA, Components::Collider & colliderA) {
-			registry.each<Components::Transform, Components::Collider>(
-                [&](Entity b, Components::Transform & transformB, Components::Collider & colliderB) {
+		for (Entity a : entities){
+			Components::Transform& transformA = registry.getComponent<Components::Transform>(a);
+			Components::Collider& colliderA = registry.getComponent<Components::Collider>(a);
+			for (Entity b: entities) {
+				Components::Transform& transformB = registry.getComponent<Components::Transform>(b);
+				Components::Collider& colliderB = registry.getComponent<Components::Collider>(b);
+
                 if (a >= b) { return; }
 
 				Collision collision =
@@ -133,8 +136,8 @@ class CollisionSystem {
 
 				transformB.position =
 					transformB.position + collision.normal * (collision.penetration * 0.5f);
-			});
-	    });
+			};
+	    };
 	}
 
 	/**
