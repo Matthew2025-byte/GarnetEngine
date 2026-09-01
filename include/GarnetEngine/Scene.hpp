@@ -18,10 +18,10 @@ namespace Garnet {
  * 
  */
 struct usedAssets {
-	std::vector<std::string> textures;
+    std::vector<std::string> textures;
 };
 enum assetType {
-	Texture,
+    Texture,
 };
 
 /**
@@ -34,28 +34,28 @@ enum assetType {
  * file).
  */
 class Scene {
-	public:
-	/**
-	 * @brief Adds an asset to the asset list
-	 * 
-	 * @param name Name of asset to add
-	 * @param type Type (eg. Texture)
-	 */
-	void addAsset(std::string name, assetType type) {
-		switch (type) {
-			case Texture:
-				requiredAssets.textures.push_back(name);
-		}
-	};
-	/**
-	 * @brief Get the requiredAssets object
-	 * 
-	 * @return A list of all assets required to properly handle the scene
-	 */
-	usedAssets getRequiredAssets() { return requiredAssets; }
+    public:
+    /**
+     * @brief Adds an asset to the asset list
+     * 
+     * @param name Name of asset to add
+     * @param type Type (eg. Texture)
+     */
+    void addAsset(std::string name, assetType type) {
+        switch (type) {
+            case Texture:
+                requiredAssets.textures.push_back(name);
+                break;
+        }
+    };
+    /**
+     * @brief Get the requiredAssets object
+     * 
+     * @return A list of all assets required to properly handle the scene
+     */
+    usedAssets getRequiredAssets() { return requiredAssets; }
 
-Physics
-        /**
+    /**
          * @brief Binds a scene-wide system.
          *
          * Intended for systems that need access to the entire
@@ -66,41 +66,44 @@ Physics
         void bindSystem(void (*func)(float, Scene&))
         {
             callbacks.emplace_back(
-                [this, func](float dt)
+                [this, func](float dt, Registry& registry)
                 {
                     func(dt, *this);
                 }
             );
         }
 
-	/**
-	 * @brief Runs all bound methods
-	 *
-	 * @param dt deltaTime for physics updates
-	 */
-	void update(float dt, Registry& registry);
-main
+    /**
+     * @brief Runs all bound methods
+     *
+     * @param dt deltaTime for physics updates
+     */
+    void update(float dt, Registry& registry)
+    {
+        for (auto& cb : callbacks)
+            cb(dt, registry);
+    }
 
-	/**
-	 * @brief Binds a method to Scene.update(dt)
-	 * @details Argument types are automatically determined at compile time
-	 *
-	 * @param func Function to bind matching (float dt, Components&...)
-	 */
-	template <typename... Components>
-	void bind(void (*func)(float, Entity, Components&...)) {
-		callbacks.emplace_back([func](float dt, Registry& registry) {
-			registry.each<Components...>(
-				[func, dt](Entity e, Components&... c) { func(dt, e, c...); });
-		});
-	}
+    /**
+     * @brief Binds a method to Scene.update(dt)
+     * @details Argument types are automatically determined at compile time
+     *
+     * @param func Function to bind matching (float dt, Components&...)
+     */
+    template <typename... Components>
+    void bind(void (*func)(float, Entity, Components&...)) {
+        callbacks.emplace_back([func](float dt, Registry& registry) {
+            registry.each<Components...>(
+                [func, dt](Entity e, Components&... c) { func(dt, e, c...); });
+        });
+    }
 
-	std::vector<std::function<void(float, Registry&)>>& getCallbacks() { return callbacks; }
-	Registry& getInitRegistry() { return initRegistry; }
+    std::vector<std::function<void(float, Registry&)>>& getCallbacks() { return callbacks; }
+    Registry& getInitRegistry() { return initRegistry; }
 
-	private:
-	std::vector<std::function<void(float, Registry&)>> callbacks;
-	usedAssets requiredAssets;
-	Registry initRegistry;
+    private:
+    std::vector<std::function<void(float, Registry&)>> callbacks;
+    usedAssets requiredAssets;
+    Registry initRegistry;
 };
 }  // namespace Garnet
