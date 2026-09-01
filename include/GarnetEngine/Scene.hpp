@@ -62,10 +62,12 @@ class Scene {
 	void update(float dt, Registry& registry);
 
 	/**
-	 * @brief Binds a method to Scene.update(dt)
+	 * @brief Binds a standalone method to the scene
 	 * Argument types are automatically determined at compile time.
 	 * Passes deltatime (dt), the currently selected entity, and a reference to the requested
-	 * components bound to the entity.
+	 * components bound to the entity.  An example use case would be updating a entities position
+	 * based on velocity, where you don't need to access all entities at once.
+	 * 
 	 *
 	 * @param func Function to bind matching (float dt, Components&...)
 	 */
