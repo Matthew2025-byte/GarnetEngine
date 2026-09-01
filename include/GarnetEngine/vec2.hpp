@@ -1,6 +1,21 @@
+/**
+ * @file vec2.hpp
+ * @author Matthew2025-byte
+ * @brief Vector declaration
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
 #pragma once
 #include <string>
 namespace Garnet {
+    /**
+     * @brief vec2 is a basic Vector2 implementation for GarnetEngine
+     * 
+     * Additional methods will be added when they become necessary.  Work
+     * in progress.
+     * 
+     */
     struct vec2 {
         float x, y;
         vec2() : x(0), y(0) {};

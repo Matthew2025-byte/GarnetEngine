@@ -1,3 +1,11 @@
+/**
+ * @file Renderer.hpp
+ * @author Matthew2025-byte
+ * @brief Prototype renderer
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
 #pragma once
 #include <SDL3/SDL.h>
 #include "Registry.hpp"

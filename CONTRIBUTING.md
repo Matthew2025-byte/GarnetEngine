@@ -1,6 +1,6 @@
 # Contribution Guidelines
 
-
+# Documentation Requirements
 ## File Header
 Each file must contain a header that contains the following:
 ```cpp
@@ -56,3 +56,18 @@ For main or obscure parts of the library add `@code` blocks to provide an exampl
  * });
  * 
  * @endcode
+ */
+```
+
+
+
+# Formatting Requirements
+
+## Naming
+- Variables: camelCase
+- Methods: camelCase
+- Classes: PascalCase
+- Constants: UPPERCASE
+
+## Formatting
+Use the provided .clang-format file for standardized code formatting.

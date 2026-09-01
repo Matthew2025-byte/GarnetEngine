@@ -1,0 +1,15 @@
+BasedOnStyle: Google
+Language: Cpp
+
+BinPackParameters: true
+ColumnLimit: 100
+
+
+UseTab: Always
+IndentWidth: 4
+TabWidth: 4
+
+AllowShortIfStatementOnSingleLine: AllIfsAndElse
+AllowShortBlocksOnSingleLine: Always
+AccessModifierOffset: 0
+
