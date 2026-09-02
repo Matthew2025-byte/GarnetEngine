@@ -10,19 +10,20 @@ TEST_CASE("Test Registry") {
     Garnet::Entity e1 = registry.createEntity();
     Garnet::Entity e2 = registry.createEntity();
     Garnet::Entity e3 = registry.createEntity();
+
+    registry.addComponent<health>(e1);
+    registry.addComponent<health>(e2, {50});
+    registry.addComponent<health>(e3);
+
+    registry.addComponent<pos>(e1);
+    registry.addComponent<pos>(e2);
+
     SUBCASE("Check createEntity") {
-        Garnet::Registry r;
-        CHECK_EQ(r.createEntity(), 0);
-        CHECK_EQ(r.createEntity(), 2);
+        CHECK_EQ(e1, 0);
+        CHECK_EQ(e2, 1);
+        CHECK_EQ(e3, 2);
     }
     SUBCASE("Check addComponent") {
-        registry.addComponent<health>(e1);
-        registry.addComponent<health>(e2, {50});
-        registry.addComponent<health>(e3);
-
-        registry.addComponent<pos>(e1);
-        registry.addComponent<pos>(e2);
-
         CHECK(registry.getComponent<health>(e1).h == 100);
         CHECK(registry.getComponent<health>(e2).h == 50);
     }
