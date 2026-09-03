@@ -12,10 +12,29 @@
 #include "vec2.hpp"
 
 namespace Garnet::Components {
+/**
+ * @brief Represents the position and rotation of an entity
+ * 
+ */
 struct Transform {
 	Garnet::vec2 position;
 	float rotation;
 };
+
+/**
+ * @brief Type of collider for an entity
+ * 
+ */
+enum colliderType { AABB, Circle };
+
+/**
+ * @brief Container for a collider radius
+ * 
+ */
+struct circleCollider {
+	float radius;
+};
+
 
 /**
  * @brief Axis-aligned bounding box collider.
@@ -31,7 +50,16 @@ struct Collider {
 	vec2 size{1.0f, 1.0f};
 	vec2 offset{0.0f, 0.0f};
 
+	colliderType type;
+
 	bool isTrigger = false;
+
+	Collider(vec2 size, vec2 offset, colliderType type, bool isTrigger = false)
+		: size(size), offset(offset), type(type), isTrigger(isTrigger) {}
+	Collider(vec2 size)
+		: size(size), offset(0.0f, 0.0f), type(AABB), isTrigger(false) {}
+	Collider(vec2 size, colliderType type)
+		: size(size), offset(0.0f, 0.0f), type(type), isTrigger(false) {}
 };
 
 /**
@@ -73,5 +101,9 @@ struct Rigidbody {
 	 * @returns Inverse mass value or zero for static bodies.
 	 */
 	float inverseMass() const { return (isStatic || mass <= 0.0f) ? 0.0f : 1.0f / mass; }
+
+	Rigidbody() = default;
+	Rigidbody(float mass, float restitution = 0.2f, bool isStatic = false)
+		: mass(mass), restitution(restitution), isStatic(isStatic) {}
 };
 }  // namespace Garnet::Components

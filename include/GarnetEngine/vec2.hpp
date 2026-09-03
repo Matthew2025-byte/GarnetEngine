@@ -70,5 +70,12 @@ namespace Garnet {
          * @return The result of scalar division
          */
         vec2 operator / (float scalar) const;
+
+        vec2& operator = (const vec2& other);
+        
+        vec2& operator += (const vec2& other);
+        vec2& operator -= (const vec2& other);
+        vec2& operator *= (float scalar);
+        vec2& operator /= (float scalar);
     };
 }

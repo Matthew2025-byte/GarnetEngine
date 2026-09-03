@@ -30,4 +30,11 @@ namespace Garnet {
 
 
     vec2 vec2::operator/(float scalar) const { return vec2(this->x / scalar, this->y / scalar); }
+
+    vec2& vec2::operator = (const vec2& other) { x = other.x; y = other.y; return *this; }
+
+    vec2& vec2::operator += (const vec2& other) { x += other.x; y += other.y; return *this; }
+    vec2& vec2::operator -= (const vec2& other) { x -= other.x; y -= other.y; return *this; }
+    vec2& vec2::operator *= (float scalar)      { x *= scalar; y *= scalar; return *this; }
+    vec2& vec2::operator /= (float scalar)      { x /= scalar; y /= scalar; return *this; }
 }
