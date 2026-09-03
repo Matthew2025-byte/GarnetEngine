@@ -20,6 +20,7 @@ find_package(SDL3_ttf CONFIG REQUIRED)
 
 # Add .cpp files
 add_library(GarnetEngine SHARED
+    src/CollisionSystem.cpp
     src/vec2.cpp
     src/FontManager.cpp
     src/TextureManager.cpp
