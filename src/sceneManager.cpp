@@ -11,7 +11,7 @@ void SceneManager::addScene(std::string name, Scene& scene) {
 	}
 	availableScenes[name] = &scene;
     if (!activeScene) {
-        activeScene = &scene;
+        setActiveScene(name);
     }
 }
 
@@ -25,6 +25,15 @@ void SceneManager::saveScene(std::string name) {
 	throw std::runtime_error("saveScene Not yet implemented");
 }
 
+void Garnet::SceneManager::setActiveScene(std::string name) {
+	activeScene = availableScenes[name];
+	usedAssets assets = activeScene->getRequiredAssets();
+
+	for (auto texture : assets.textures) {
+		textures.Load(texture.first.c_str(), texture.second);
+	}
+}
+
 void SceneManager::switchScene(std::string name) {
 	// Save scene
 	// Load new scene
@@ -34,10 +43,8 @@ void SceneManager::switchScene(std::string name) {
 void SceneManager::start() {
     SDL_Log("Initializing Scene");
 	auto& callbacks = activeScene->getCallbacks();
-    SDL_Log("Loading Callbacks");
     // Currently crashing on this line
 	sceneData = std::make_unique<ThreadData>(activeScene->getInitRegistry(), callbacks);
-    SDL_Log("Created thread data");
 
 	updateThread = SDL_CreateThread(threadLogic, "Update Logic", sceneData.get());
     if (!updateThread) {

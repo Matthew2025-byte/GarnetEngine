@@ -8,6 +8,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <map>
 
 #include "Registry.hpp"
 #include "Renderer.hpp"
@@ -18,7 +19,7 @@ namespace Garnet {
  *
  */
 struct usedAssets {
-	std::vector<std::string> textures;
+	std::unordered_map<std::string, std::unordered_map<std::string, std::string>> textures;
 };
 enum assetType {
 	Texture,
@@ -41,10 +42,10 @@ class Scene {
 	 * @param name Name of asset to add
 	 * @param type Type (eg. Texture)
 	 */
-	void addAsset(std::string name, assetType type) {
+	void addAsset(std::string name, assetType type, std::unordered_map<std::string, std::string> props = {}) {
 		switch (type) {
-			case Texture:
-				requiredAssets.textures.push_back(name);
+			case Texture: 
+				requiredAssets.textures[name] = std::move(props);
 		}
 	};
 	/**

@@ -64,6 +64,14 @@ class SceneManager {
 	 * @param name Name of the scene
 	 */
 	void saveScene(std::string name);
+
+	/**
+	 * @brief Set the Active Scene object
+	 * 
+	 * @param name Name of the scene to load
+	 */
+	void setActiveScene(std::string name);
+
 	/**
 	 * @brief Saves current scene state and loads the new scene
 	 *
@@ -74,6 +82,7 @@ class SceneManager {
 	// Game loop
 	void start();
 	Registry& getRenderRegistry();
+	TextureManager& getTextureManager() { return textures; }
 
 	void setActiveScene(Scene* scene) { activeScene = scene; }
 
