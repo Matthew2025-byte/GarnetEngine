@@ -33,6 +33,8 @@ enum colliderType { AABB, Circle };
  */
 struct circleCollider {
 	float radius;
+
+	circleCollider() = default;
 };
 
 
@@ -60,6 +62,7 @@ struct Collider {
 		: size(size), offset(0.0f, 0.0f), type(AABB), isTrigger(false) {}
 	Collider(vec2 size, colliderType type)
 		: size(size), offset(0.0f, 0.0f), type(type), isTrigger(false) {}
+	Collider() = default;
 };
 
 /**
