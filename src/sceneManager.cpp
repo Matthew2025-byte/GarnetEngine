@@ -30,7 +30,10 @@ void Garnet::SceneManager::setActiveScene(std::string name) {
 	usedAssets assets = activeScene->getRequiredAssets();
 
 	for (auto texture : assets.textures) {
-		textures.Load(texture.first.c_str(), texture.second);
+		// update to get from texture vector
+		for (auto properties : texture.second) {
+			textures.Load(texture.first.c_str(), properties);
+		}
 	}
 }
 
@@ -43,7 +46,6 @@ void SceneManager::switchScene(std::string name) {
 void SceneManager::start() {
     SDL_Log("Initializing Scene");
 	auto& callbacks = activeScene->getCallbacks();
-    // Currently crashing on this line
 	sceneData = std::make_unique<ThreadData>(activeScene->getInitRegistry(), callbacks);
 
 	updateThread = SDL_CreateThread(threadLogic, "Update Logic", sceneData.get());

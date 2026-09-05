@@ -19,7 +19,7 @@ namespace Garnet {
  *
  */
 struct usedAssets {
-	std::unordered_map<std::string, std::unordered_map<std::string, std::string>> textures;
+	std::unordered_map<std::string, std::vector<std::unordered_map<std::string, std::string>>> textures;
 };
 enum assetType {
 	Texture,
@@ -45,7 +45,7 @@ class Scene {
 	void addAsset(std::string name, assetType type, std::unordered_map<std::string, std::string> props = {}) {
 		switch (type) {
 			case Texture: 
-				requiredAssets.textures[name] = std::move(props);
+				requiredAssets.textures[name].push_back(std::move(props));
 		}
 	};
 	/**

@@ -75,7 +75,7 @@ class SceneManager {
 	/**
 	 * @brief Saves current scene state and loads the new scene
 	 *
-	 * @param name Scene to switch to
+	 * @param name Scene to switch to Load
 	 */
 	void switchScene(std::string name);
 
@@ -83,8 +83,6 @@ class SceneManager {
 	void start();
 	Registry& getRenderRegistry();
 	TextureManager& getTextureManager() { return textures; }
-
-	void setActiveScene(Scene* scene) { activeScene = scene; }
 
 	SceneManager(SDL_Renderer* r)
 		: activeScene(nullptr), updateThread(nullptr), textures(r) {}

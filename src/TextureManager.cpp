@@ -14,31 +14,49 @@ SDL_Texture* Garnet::TextureManager::LoadTextureFromSVG(const char* filepath, in
     }
 
 
-Garnet::TextureID Garnet::TextureManager::Load(const char* file, std::unordered_map<std::string, std::string> properties) {
-    auto it = TextureCache.find(file);
-    if (it != TextureCache.end()) return it->second;
-
+Garnet::TextureID Garnet::TextureManager::Load(std::string file, std::unordered_map<std::string, std::string> properties) {
     std::filesystem::path filepath = root_folder / file;
     std::string ext = filepath.extension().string();
+    std::string name = filepath.stem().string();
     if (!std::filesystem::exists(filepath)) {
         SDL_Log("Failed to find file: %s", std::filesystem::absolute(filepath).string().c_str());
         return InvalidTexture;
     }
 
     SDL_Texture* texture;
+    std::string cache_key;
+
     if (ext == ".svg") {
-        int width = 10;
-        if (properties.contains("width")) {
-            width = std::stoi(properties["width"]);
+        int width = std::stoi(properties["width"]);
+        cache_key = name + "_" + std::to_string(width) + ext;
+
+        auto it = TextureCache.find(cache_key);
+        if (it != TextureCache.end()) {
+            SDL_Log("Loading from cache: %s", cache_key.c_str());
+            return it->second;
         }
+        else SDL_Log("Creating texture: %s", cache_key.c_str());
+
         texture = LoadTextureFromSVG(filepath.string().c_str(), width);
     }
     else {
+        auto it = TextureCache.find(file);
+        if (it != TextureCache.end()) {
+            SDL_Log("Loading from cache: %s", cache_key);
+            return it->second;
+        }
+        cache_key = std::move(file);
+
         texture = IMG_LoadTexture(renderer, filepath.string().c_str());
     }
-    if (!texture) { SDL_Log("Failed to create texture: %s", SDL_GetError()); return InvalidTexture; }
-    TextureID id { static_cast<uint32_t>(Textures.size()) };
-    TextureCache.emplace(file, id);
+    
+    if (!texture) {
+        SDL_Log("Failed to create texture: %s", SDL_GetError());
+        return InvalidTexture;
+    }
+
+    TextureID id(static_cast<uint32_t>(Textures.size()));
+    TextureCache.emplace(cache_key, id);
     Textures.push_back(texture);
 
     SDL_Log("Created Texture at %i", id.index);

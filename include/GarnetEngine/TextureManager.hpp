@@ -63,7 +63,7 @@ class TextureManager {
      * @param properties Allows for configuration of filetype specific properties
      * @returns Returns a TextureID
      */
-    TextureID Load(const char* file, std::unordered_map<std::string, std::string> properties={});
+    TextureID Load(std::string file, std::unordered_map<std::string, std::string> properties={});
      /**
      * @brief Gets the TextureID of a cached texture
      * 
