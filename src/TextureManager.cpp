@@ -14,7 +14,7 @@ SDL_Texture* Garnet::TextureManager::LoadTextureFromSVG(const char* filepath, in
     }
 
 
-Garnet::TextureID Garnet::TextureManager::Load(const char* file, SDL_PropertiesID properties) {
+Garnet::TextureID Garnet::TextureManager::Load(const char* file, std::unordered_map<std::string, std::string> properties) {
     auto it = TextureCache.find(file);
     if (it != TextureCache.end()) return it->second;
 
@@ -27,7 +27,11 @@ Garnet::TextureID Garnet::TextureManager::Load(const char* file, SDL_PropertiesI
 
     SDL_Texture* texture;
     if (ext == ".svg") {
-        texture = LoadTextureFromSVG(filepath.string().c_str(), SDL_GetFloatProperty(properties, GARNET_SVG_RASTER_WIDTH, 10));
+        int width = 10;
+        if (properties.contains("width")) {
+            width = std::stoi(properties["width"]);
+        }
+        texture = LoadTextureFromSVG(filepath.string().c_str(), width);
     }
     else {
         texture = IMG_LoadTexture(renderer, filepath.string().c_str());
@@ -41,11 +45,21 @@ Garnet::TextureID Garnet::TextureManager::Load(const char* file, SDL_PropertiesI
     return id;
 }
 
+Garnet::TextureID Garnet::TextureManager::findTexture(std::string name) {
+    auto it = TextureCache.find(name);
+    if (it != TextureCache.end()) {
+        return it->second;
+    }
+    SDL_Log("Unable to find texture: %s", name.c_str());
+    return InvalidTexture;
+}
+
 SDL_Texture* Garnet::TextureManager::getTexture(Garnet::TextureID id) {
-    #ifdef _DEBUG
-        if (id.index >= Textures.size()) SDL_Log("Attempted to access Texture[%i] - Size is %i", id.index, Textures.size());
-        return Textures.at(id.index);
-    #else
-        return Textures[id.index];
-    #endif
+#ifdef _DEBUG
+	if (id.index >= Textures.size())
+		SDL_Log("Attempted to access Texture[%i] - Size is %i", id.index, Textures.size());
+	return Textures.at(id.index);
+#else
+	return Textures[id.index];
+#endif
 }
