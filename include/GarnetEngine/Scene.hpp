@@ -19,6 +19,13 @@ namespace Garnet {
  *
  */
 struct usedAssets {
+/**
+ * @brief stores texture files and properties for multiple load passes
+ * The order is: key, properties.
+ *
+ * Where properties is metadata for each load pass, containing information
+ * for loading .svg files and rasterization
+ */
 	std::unordered_map<std::string, std::vector<std::unordered_map<std::string, std::string>>> textures;
 };
 enum assetType {
