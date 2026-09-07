@@ -28,8 +28,9 @@ class SpriteBuffer {
     }
 
     std::unordered_map<int, Sprite> getDelta() { return spriteDelta; }
-    void setDelta(std::unordered_map<int, Sprite> delta) { spriteDelta.clear(); spriteDelta = delta; }
     const std::vector<Sprite>& getSprites() const { return sprites; }
+    void setDelta(std::unordered_map<int, Sprite> delta) { spriteDelta.clear(); spriteDelta = delta; }
+    void setSprites(std::vector<Sprite> sprites) { this->sprites = sprites; }
 
     Sprite& operator[] (int index) {
         spriteDelta[index] = sprites[index];

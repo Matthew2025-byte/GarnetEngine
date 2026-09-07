@@ -61,14 +61,14 @@ void SceneManager::start() {
 //	return sceneData->registries[SDL_GetAtomicInt(&sceneData->renderReg)];
 //}
 
-std::vector<Sprite> Garnet::SceneManager::getSprites() {
+SpriteBuffer Garnet::SceneManager::getSprites() {
 	return sceneData->spriteBuff[SDL_GetAtomicInt(&sceneData->renderReg)];
 }
 
 int SDLCALL SceneManager::threadLogic(void* args) {
 	ThreadData& data = *static_cast<ThreadData*>(args);
 	Registry lastBuffer = data.initRegistry;
-	std::vector<Sprite> sprites;
+	std::vector<Sprite> spriteBuffer;
 
 	constexpr Uint64 target_ns = 16'666'667;  // Target tick time in NS
 	Uint64 last_ticks = SDL_GetTicksNS();	  // last frame for dt
@@ -81,16 +81,17 @@ int SDLCALL SceneManager::threadLogic(void* args) {
 		for (auto& func : data.callbacks) {
 			func(dt, lastBuffer);
 		}
-		sprites.clear();
+		
+		spriteBuffer.clear();
 		lastBuffer.each<Components::Transform, TextureID>([&](Entity entity, Components::Transform& transform, TextureID id) {
-			sprites.push_back({nullptr, id, transform});
+			spriteBuffer.push_back({nullptr, id, transform});
 		});
 
 		// Locks the written-to mutex and associated registry and copies the internal buffer to
         // the render buffer
 		int writeBuff = !SDL_GetAtomicInt(&data.renderReg);
 		SDL_LockMutex(data.mutexes[writeBuff]);
-		data.spriteBuff[writeBuff] = sprites;
+		data.spriteBuff[writeBuff].setSprites(spriteBuffer);
 		SDL_UnlockMutex(data.mutexes[writeBuff]);
 
 		SDL_SetAtomicInt(&data.renderReg, writeBuff);

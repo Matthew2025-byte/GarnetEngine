@@ -21,7 +21,7 @@ namespace Garnet {
  */
 struct ThreadData {
 	Garnet::Registry initRegistry;
-	std::vector<Sprite> spriteBuff[2];
+	SpriteBuffer spriteBuff[2];
 	SDL_Mutex* mutexes[2];
 	SDL_AtomicInt renderReg{0};
 	SDL_AtomicInt running{1};
@@ -83,7 +83,7 @@ class SceneManager {
 	// Game loop
 	void start();
 	//Registry& getRenderRegistry();
-	std::vector<Sprite> getSprites();
+	SpriteBuffer getSprites();
 	TextureManager& getTextureManager() { return textures; }
 
 	SceneManager(SDL_Renderer* r)

@@ -16,8 +16,8 @@ void Garnet::Renderer::update(Garnet::Registry& registry) {
     });
 }
 
-void Garnet::Renderer::renderSprites(std::vector<Sprite> sprites) {
-    for (auto sprite : sprites) {
+void Garnet::Renderer::renderSprites(SpriteBuffer sprites) {
+    for (auto sprite : sprites.getSprites()) {
         SDL_Texture* spriteTexture = this->textureManager.getTexture(sprite.id);
         RenderTexture(this->renderer, sprite.transform, spriteTexture);
     }

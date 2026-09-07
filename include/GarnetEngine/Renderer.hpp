@@ -32,7 +32,7 @@ class Renderer {
     
     void update(Garnet::Registry& registry);
 
-    void renderSprites(std::vector<Sprite> sprites);
+    void renderSprites(SpriteBuffer sprites);
 };
 
 }
