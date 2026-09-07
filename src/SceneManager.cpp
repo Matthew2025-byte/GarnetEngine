@@ -57,10 +57,6 @@ void SceneManager::start() {
     SDL_Log("Created Thread");
 }
 
-//Registry& SceneManager::getRenderRegistry() {
-//	return sceneData->registries[SDL_GetAtomicInt(&sceneData->renderReg)];
-//}
-
 SpriteBuffer Garnet::SceneManager::getSprites() {
 	return sceneData->spriteBuff[SDL_GetAtomicInt(&sceneData->renderReg)];
 }

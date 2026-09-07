@@ -8,14 +8,6 @@ void Garnet::Renderer::RenderTexture(SDL_Renderer* renderer, Garnet::Components:
     SDL_RenderTextureRotated(renderer, texture, NULL, &rect, static_cast<double>(transform.rotation), NULL, SDL_FLIP_NONE);
 }
 
-
-void Garnet::Renderer::update(Garnet::Registry& registry) {
-    registry.each<Garnet::TextureID, Garnet::Components::Transform>([&](const Garnet::Entity entity, Garnet::TextureID textureID, const Garnet::Components::Transform& transform) {
-        SDL_Texture* texture = this->textureManager.getTexture(textureID);
-        this->RenderTexture(this->renderer, transform, texture);
-    });
-}
-
 void Garnet::Renderer::renderSprites(SpriteBuffer sprites) {
     for (auto sprite : sprites.getSprites()) {
         SDL_Texture* spriteTexture = this->textureManager.getTexture(sprite.id);

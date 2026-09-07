@@ -82,7 +82,6 @@ class SceneManager {
 
 	// Game loop
 	void start();
-	//Registry& getRenderRegistry();
 	SpriteBuffer getSprites();
 	TextureManager& getTextureManager() { return textures; }
 

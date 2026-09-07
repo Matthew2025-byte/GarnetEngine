@@ -29,8 +29,6 @@ class Renderer {
     public:
     Renderer(SDL_Renderer* renderer, Garnet::TextureManager& manager) :
         renderer(renderer), textureManager(manager) {}
-    
-    void update(Garnet::Registry& registry);
 
     void renderSprites(SpriteBuffer sprites);
 };
