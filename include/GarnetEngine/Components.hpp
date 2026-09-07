@@ -19,6 +19,10 @@ namespace Garnet::Components {
 struct Transform {
 	Garnet::vec2 position;
 	float rotation;
+
+	bool operator == (const Transform& other) const {
+		return this->rotation == other.rotation && this->position == other.position;
+	}
 };
 
 /**

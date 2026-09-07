@@ -49,25 +49,13 @@ class Scene {
 	 * @param name Name of asset to add
 	 * @param type Type (eg. Texture)
 	 */
-	void addAsset(std::string name, assetType type, std::unordered_map<std::string, std::string> props = {}) {
-		switch (type) {
-			case Texture: 
-				requiredAssets.textures[name].push_back(std::move(props));
-		}
-	};
+	void addAsset(std::string name, assetType type, std::unordered_map<std::string, std::string> props = {});
 	/**
 	 * @brief Get the requiredAssets object
 	 *
 	 * @return A list of all assets required to properly handle the scene
 	 */
-	usedAssets getRequiredAssets() { return requiredAssets; }
-
-	/**
-	 * @brief Runs all bound methods
-	 *
-	 * @param dt deltaTime for physics updates
-	 */
-	void update(float dt, Registry& registry);
+	usedAssets getRequiredAssets();
 
 	/**
 	 * @brief Binds a standalone method to the scene
@@ -105,8 +93,8 @@ class Scene {
 		});
 	}
 
-	std::vector<std::function<void(float, Registry&)>>& getCallbacks() { return callbacks; }
-	Registry& getInitRegistry() { return initRegistry; }
+	std::vector<std::function<void(float, Registry&)>>& getCallbacks();
+	Registry& getInitRegistry();
 
 	private:
 	std::vector<std::function<void(float, Registry&)>> callbacks;

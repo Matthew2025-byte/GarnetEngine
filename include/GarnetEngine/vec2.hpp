@@ -77,5 +77,9 @@ namespace Garnet {
         vec2& operator -= (const vec2& other);
         vec2& operator *= (float scalar);
         vec2& operator /= (float scalar);
+
+        bool operator == (const vec2& other) const {
+            return this->x == other.x && this->y == other.y;
+        }
     };
 }
