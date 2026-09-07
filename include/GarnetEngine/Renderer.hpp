@@ -7,10 +7,12 @@
  * 
  */
 #pragma once
+#include <vector>
 #include <SDL3/SDL.h>
 #include "Registry.hpp"
 #include "Components.hpp"
 #include "TextureManager.hpp"
+#include "Sprite.hpp"
 
 namespace Garnet {
 
@@ -20,16 +22,17 @@ class Renderer {
     Garnet::TextureManager& textureManager;
 
     std::vector<SDL_Texture*> TextureIDs;
-    uint32_t textureIndex = 0;
     
 
 
-    void RenderTexture(SDL_Renderer* renderer, Garnet::Components::Transform transform, Garnet::TextureID textureID);
+    void RenderTexture(SDL_Renderer* renderer, Garnet::Components::Transform transform, SDL_Texture* texture);
     public:
     Renderer(SDL_Renderer* renderer, Garnet::TextureManager& manager) :
         renderer(renderer), textureManager(manager) {}
     
     void update(Garnet::Registry& registry);
+
+    void renderSprites(std::vector<Sprite> sprites);
 };
 
 }
