@@ -47,7 +47,19 @@ void SceneManager::switchScene(std::string name) {
 void SceneManager::start(const SpriteBuffer& spriteBuff) {
     SDL_Log("Initializing Scene");
 	auto& callbacks = activeScene->getCallbacks();
-	sceneData = std::make_unique<ThreadData>(activeScene->getInitRegistry(), spriteBuff, callbacks);
+	auto& initRegistry = activeScene->getInitRegistry();
+	SpriteBuffer buff = spriteBuff;
+	SDL_Log("Loading %i sprites", buff.getSprites().size());
+
+	initRegistry.each<Components::Sprite>([&](Entity entity, Components::Sprite spriteInfo) {
+		const std::string& textureName = spriteInfo.textureName;
+		TextureID texture = getTextureManager().findTexture(textureName);
+		buff[entity].texture = this->getTextureManager().getTexture(texture);
+		SDL_Log("Loaded texture (%s) as: %i", textureName.c_str(), texture.index);
+	});
+	buff.push();
+
+	sceneData = std::make_unique<ThreadData>(activeScene->getInitRegistry(), buff, callbacks);
 
 	updateThread = SDL_CreateThread(threadLogic, "Update Logic", sceneData.get());
     if (!updateThread) {

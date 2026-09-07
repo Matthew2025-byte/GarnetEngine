@@ -10,7 +10,6 @@ void Garnet::Renderer::RenderTexture(SDL_Renderer* renderer, Garnet::Components:
 
 void Garnet::Renderer::renderSprites(SpriteBuffer sprites) {
     for (auto sprite : sprites.getSprites()) {
-        SDL_Texture* spriteTexture = this->textureManager.getTexture(sprite.id);
-        RenderTexture(this->renderer, sprite.transform, spriteTexture);
+        RenderTexture(this->renderer, sprite.transform, sprite.texture);
     }
 }

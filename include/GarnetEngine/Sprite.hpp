@@ -16,7 +16,6 @@ namespace Garnet {
 
 struct Sprite {
     SDL_Texture* texture;
-    TextureID id;
     Components::Transform transform;
 
     bool operator == (const Sprite& other) { return this->texture == other.texture && this->transform == other.transform; }
@@ -34,9 +33,15 @@ class SpriteBuffer {
         }
         spriteDelta.clear();
     }
+    void push(const std::unordered_map<int, Sprite>& delta) {
+        for (auto& [index, sprite] : delta) {
+            sprites[index] = sprite;
+        }
+        spriteDelta.clear();
+    }
 
     std::unordered_map<int, Sprite> getDelta() { return spriteDelta; }
-    const std::vector<Sprite>& getSprites() const { return sprites; }
+    std::vector<Sprite>& getSprites() { return sprites; }
     void setDelta(std::unordered_map<int, Sprite> delta) { spriteDelta.clear(); spriteDelta = delta; }
     void setSprites(std::vector<Sprite> sprites) { this->sprites = sprites; }
     void addSprite(Entity entity, Sprite sprite) {
