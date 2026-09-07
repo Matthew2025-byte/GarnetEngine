@@ -44,10 +44,10 @@ void SceneManager::switchScene(std::string name) {
 	throw std::runtime_error("switchScene Not yet implemented");
 }
 
-void SceneManager::start() {
+void SceneManager::start(const SpriteBuffer& spriteBuff) {
     SDL_Log("Initializing Scene");
 	auto& callbacks = activeScene->getCallbacks();
-	sceneData = std::make_unique<ThreadData>(activeScene->getInitRegistry(), callbacks);
+	sceneData = std::make_unique<ThreadData>(activeScene->getInitRegistry(), spriteBuff, callbacks);
 
 	updateThread = SDL_CreateThread(threadLogic, "Update Logic", sceneData.get());
     if (!updateThread) {
@@ -57,14 +57,14 @@ void SceneManager::start() {
     SDL_Log("Created Thread");
 }
 
-SpriteBuffer Garnet::SceneManager::getSprites() {
-	return sceneData->spriteBuff[SDL_GetAtomicInt(&sceneData->renderReg)];
+std::unordered_map<int, Sprite> Garnet::SceneManager::getSpriteDelta() {
+	return sceneData->sprite_deltaBuff[SDL_GetAtomicInt(&sceneData->renderReg)];
 }
 
 int SDLCALL SceneManager::threadLogic(void* args) {
 	ThreadData& data = *static_cast<ThreadData*>(args);
 	Registry lastBuffer = data.initRegistry;
-	std::vector<Sprite> spriteBuffer;
+	SpriteBuffer spriteBuffer = data.initSpriteBuff;
 
 	constexpr Uint64 target_ns = 16'666'667;  // Target tick time in NS
 	Uint64 last_ticks = SDL_GetTicksNS();	  // last frame for dt
@@ -78,16 +78,16 @@ int SDLCALL SceneManager::threadLogic(void* args) {
 			func(dt, lastBuffer);
 		}
 		
-		spriteBuffer.clear();
-		lastBuffer.each<Components::Transform, TextureID>([&](Entity entity, Components::Transform& transform, TextureID id) {
-			spriteBuffer.push_back({nullptr, id, transform});
+
+		lastBuffer.each<Components::Sprite, Components::Transform>([&](Entity entity, Components::Sprite sprite, Components::Transform& transform) {
+			spriteBuffer[sprite.id].transform = transform;
 		});
 
 		// Locks the written-to mutex and associated registry and copies the internal buffer to
         // the render buffer
 		int writeBuff = !SDL_GetAtomicInt(&data.renderReg);
 		SDL_LockMutex(data.mutexes[writeBuff]);
-		data.spriteBuff[writeBuff].setSprites(spriteBuffer);
+		data.sprite_deltaBuff[writeBuff] = spriteBuffer.getDelta();
 		SDL_UnlockMutex(data.mutexes[writeBuff]);
 
 		SDL_SetAtomicInt(&data.renderReg, writeBuff);

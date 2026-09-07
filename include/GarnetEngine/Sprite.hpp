@@ -1,3 +1,11 @@
+/**
+ * @file Sprite.hpp
+ * @author Matthew 5-byte
+ * @brief Sprite tracking and rendering
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
 #pragma once
 #include <SDL3/SDL.h>
 #include <vector>
@@ -31,13 +39,19 @@ class SpriteBuffer {
     const std::vector<Sprite>& getSprites() const { return sprites; }
     void setDelta(std::unordered_map<int, Sprite> delta) { spriteDelta.clear(); spriteDelta = delta; }
     void setSprites(std::vector<Sprite> sprites) { this->sprites = sprites; }
+    void addSprite(Entity entity, Sprite sprite) {
+        entity_index[entity] = sprites.size();
+        sprites.push_back(sprite);
+    }
 
-    Sprite& operator[] (int index) {
+    Sprite& operator[] (Entity entity) {
+        Entity index = entity_index[entity];
         spriteDelta[index] = sprites[index];
         return spriteDelta[index];
     }
 
     private:
+    std::unordered_map<Entity, int> entity_index;
     std::vector<Sprite> sprites;
     std::unordered_map<int, Sprite> spriteDelta;
 };

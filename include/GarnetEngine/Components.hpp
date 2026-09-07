@@ -25,6 +25,11 @@ struct Transform {
 	}
 };
 
+struct Sprite {
+	std::string textureName;
+	int id;
+};
+
 /**
  * @brief Type of collider for an entity
  * 

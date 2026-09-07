@@ -21,15 +21,17 @@ namespace Garnet {
  */
 struct ThreadData {
 	Garnet::Registry initRegistry;
-	SpriteBuffer spriteBuff[2];
+	SpriteBuffer initSpriteBuff;
+	std::unordered_map<int, Sprite> sprite_deltaBuff[2];
 	SDL_Mutex* mutexes[2];
 	SDL_AtomicInt renderReg{0};
 	SDL_AtomicInt running{1};
     std::vector<std::function<void(float, Registry&)>> callbacks;
 
-	ThreadData(const Registry& referenceRegistry, const std::vector<std::function<void(float, Registry&)>>& callbacks)
+	ThreadData(const Registry& referenceRegistry, const SpriteBuffer& spriteBuffer, const std::vector<std::function<void(float, Registry&)>>& callbacks)
 		: callbacks(callbacks) {
         initRegistry = referenceRegistry;
+		initSpriteBuff = spriteBuffer;
         mutexes[0] = SDL_CreateMutex();
         mutexes[1] = SDL_CreateMutex();
     }
@@ -81,8 +83,8 @@ class SceneManager {
 	void switchScene(std::string name);
 
 	// Game loop
-	void start();
-	SpriteBuffer getSprites();
+	void start(const SpriteBuffer& spriteBuff);
+	std::unordered_map<int, Sprite> getSpriteDelta();
 	TextureManager& getTextureManager() { return textures; }
 
 	SceneManager(SDL_Renderer* r)
