@@ -5,12 +5,12 @@
 
 using namespace Garnet;
 
-void SceneManager::addScene(std::string name, Scene& scene) {
+void SceneManager::addScene(std::string name, std::unique_ptr<Scene> scene) {
 	if (availableScenes.find(name) != availableScenes.end()) {
 		SDL_Log("Scene already exists with name: %s", name);
 		return;
 	}
-	availableScenes[name] = &scene;
+	availableScenes[name] = std::move(scene);
     if (!activeScene) {
         setActiveScene(name);
     }
@@ -27,7 +27,7 @@ void SceneManager::saveScene(std::string name) {
 }
 
 void Garnet::SceneManager::setActiveScene(std::string name) {
-	activeScene = availableScenes[name];
+	activeScene = availableScenes[name].get();
 	usedAssets assets = activeScene->getRequiredAssets();
 
 	for (auto texture : assets.textures) {

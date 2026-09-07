@@ -54,7 +54,7 @@ class SceneManager {
 	 * @param name Name of the scene
 	 * @param scene Scene object
 	 */
-	void addScene(std::string name, Scene& scene);
+	void addScene(std::string name, std::unique_ptr<Scene> scene);
 	/**
 	 * @brief Loads a scene into memory
 	 *
@@ -99,7 +99,7 @@ class SceneManager {
 	private:
 	std::string activeSceneName;
 	Scene* activeScene;
-	std::unordered_map<std::string, Scene*> availableScenes;
+	std::unordered_map<std::string, std::unique_ptr<Scene>> availableScenes;
 
 	TextureManager textures;
 
