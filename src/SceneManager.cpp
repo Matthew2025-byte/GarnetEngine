@@ -61,29 +61,29 @@ Registry& SceneManager::getRenderRegistry() {
 }
 
 int SDLCALL SceneManager::threadLogic(void* args) {
-	std::unique_ptr<ThreadData> data(static_cast<ThreadData*>(args));
-	Registry lastBuffer = data->registries[!SDL_GetAtomicInt(&data->renderReg)];
+	ThreadData& data = *static_cast<ThreadData*>(args);
+	Registry lastBuffer = data.registries[!SDL_GetAtomicInt(&data.renderReg)];
 
 	constexpr Uint64 target_ns = 16'666'667;  // Target tick time in NS
 	Uint64 last_ticks = SDL_GetTicksNS();	  // last frame for dt
 
-	while (SDL_GetAtomicInt(&data->running)) {
+	while (SDL_GetAtomicInt(&data.running)) {
 		Uint64 frame_start = SDL_GetTicksNS();
 		float dt = (frame_start - last_ticks) / 1'000'000'000.f;
 		last_ticks = frame_start;
 
-		for (auto& func : data->callbacks) {
+		for (auto& func : data.callbacks) {
 			func(dt, lastBuffer);
 		}
 
 		// Locks the written-to mutex and associated registry and copies the internal buffer to
         // the render buffer
-		int writeBuff = !SDL_GetAtomicInt(&data->renderReg);
-		SDL_LockMutex(data->mutexes[writeBuff]);
-		data->registries[writeBuff] = lastBuffer;
-		SDL_UnlockMutex(data->mutexes[writeBuff]);
+		int writeBuff = !SDL_GetAtomicInt(&data.renderReg);
+		SDL_LockMutex(data.mutexes[writeBuff]);
+		data.registries[writeBuff] = lastBuffer;
+		SDL_UnlockMutex(data.mutexes[writeBuff]);
 
-		SDL_SetAtomicInt(&data->renderReg, writeBuff);
+		SDL_SetAtomicInt(&data.renderReg, writeBuff);
 
 		Uint64 frame_end = SDL_GetTicksNS();
 		Uint64 elapsed = frame_end - frame_start;
