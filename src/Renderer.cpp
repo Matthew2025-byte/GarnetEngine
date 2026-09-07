@@ -10,18 +10,15 @@ void Garnet::Renderer::RenderTexture(SDL_Renderer* renderer, Garnet::Components:
 
 
 void Garnet::Renderer::update(Garnet::Registry& registry) {
-    SDL_RenderClear(this->renderer);
-        
     registry.each<Garnet::TextureID, Garnet::Components::Transform>([&](const Garnet::Entity entity, Garnet::TextureID textureID, const Garnet::Components::Transform& transform) {
         SDL_Texture* texture = this->textureManager.getTexture(textureID);
         this->RenderTexture(this->renderer, transform, texture);
     });
-        
-    SDL_RenderPresent(this->renderer);
 }
 
 void Garnet::Renderer::renderSprites(std::vector<Sprite> sprites) {
     for (auto sprite : sprites) {
-        RenderTexture(this->renderer, sprite.transform, sprite.texture);
+        SDL_Texture* spriteTexture = this->textureManager.getTexture(sprite.id);
+        RenderTexture(this->renderer, sprite.transform, spriteTexture);
     }
 }

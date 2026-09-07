@@ -8,6 +8,7 @@ namespace Garnet {
 
 struct Sprite {
     SDL_Texture* texture;
+    TextureID id;
     Components::Transform transform;
 
     bool operator == (const Sprite& other) { return this->texture == other.texture && this->transform == other.transform; }

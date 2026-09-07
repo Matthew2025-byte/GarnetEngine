@@ -11,6 +11,7 @@
 
 #include "Registry.hpp"
 #include "Scene.hpp"
+#include "Sprite.hpp"
 
 namespace Garnet {
 /**
@@ -19,7 +20,8 @@ namespace Garnet {
  *
  */
 struct ThreadData {
-	Garnet::Registry registries[2];
+	Garnet::Registry initRegistry;
+	std::vector<Sprite> spriteBuff[2];
 	SDL_Mutex* mutexes[2];
 	SDL_AtomicInt renderReg{0};
 	SDL_AtomicInt running{1};
@@ -27,8 +29,7 @@ struct ThreadData {
 
 	ThreadData(const Registry& referenceRegistry, const std::vector<std::function<void(float, Registry&)>>& callbacks)
 		: callbacks(callbacks) {
-        registries[0] = referenceRegistry;
-        registries[1] = referenceRegistry;
+        initRegistry = referenceRegistry;
         mutexes[0] = SDL_CreateMutex();
         mutexes[1] = SDL_CreateMutex();
     }
@@ -81,7 +82,8 @@ class SceneManager {
 
 	// Game loop
 	void start();
-	Registry& getRenderRegistry();
+	//Registry& getRenderRegistry();
+	std::vector<Sprite> getSprites();
 	TextureManager& getTextureManager() { return textures; }
 
 	SceneManager(SDL_Renderer* r)
