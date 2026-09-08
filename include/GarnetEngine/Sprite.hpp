@@ -10,6 +10,7 @@
 #include <SDL3/SDL.h>
 #include <vector>
 #include <unordered_map>
+#include <cassert>
 #include "Components.hpp"
 
 namespace Garnet {
@@ -50,6 +51,8 @@ class SpriteBuffer {
     }
 
     Sprite& operator[] (Entity entity) {
+        auto it = entity_index.find(entity);
+        assert(it != entity_index.end() && "No sprite found with requested entity");
         Entity index = entity_index[entity];
         spriteDelta[index] = sprites[index];
         return spriteDelta[index];

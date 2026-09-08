@@ -57,9 +57,12 @@ void SceneManager::start(const SpriteBuffer& spriteBuff) {
 		buff[entity].texture = this->getTextureManager().getTexture(texture);
 		SDL_Log("Loaded texture (%s) as: %i", textureName.c_str(), texture.index);
 	});
+	auto delta = buff.getDelta();
 	buff.push();
 
 	sceneData = std::make_unique<ThreadData>(activeScene->getInitRegistry(), buff, callbacks);
+	sceneData->sprite_deltaBuff[0] = delta;
+	sceneData->sprite_deltaBuff[1] = delta;
 
 	updateThread = SDL_CreateThread(threadLogic, "Update Logic", sceneData.get());
     if (!updateThread) {
@@ -101,6 +104,7 @@ int SDLCALL SceneManager::threadLogic(void* args) {
 		SDL_LockMutex(data.mutexes[writeBuff]);
 		data.sprite_deltaBuff[writeBuff] = spriteBuffer.getDelta();
 		SDL_UnlockMutex(data.mutexes[writeBuff]);
+		spriteBuffer.push();
 
 		SDL_SetAtomicInt(&data.renderReg, writeBuff);
 
