@@ -33,6 +33,20 @@ enum assetType {
 };
 
 /**
+ * @brief Current game state
+ * 
+ */
+struct GameState {
+	/**
+	 * @brief Current game registry
+	 * 
+	 */
+	Registry& registry;
+
+	GameState(Registry& r) : registry(r) {}
+};
+
+/**
  * @brief Class representative of a single game level
  *
  * Scene is a class that coordinates all necessary assets needed to properly run a user defined
@@ -69,8 +83,8 @@ class Scene {
 	 */
 	template <typename... Components>
 	void bind(void (*func)(float, Entity, Components&...)) {
-		callbacks.emplace_back([func](float dt, Registry& registry) {
-			registry.each<Components...>(
+		callbacks.emplace_back([func](float dt, GameState& gameState) {
+			gameState.registry.each<Components...>(
 				[func, dt](Entity e, Components&... c) { func(dt, e, c...); });
 		});
 	}
@@ -86,18 +100,18 @@ class Scene {
 	 * @param func System to bind matching the signature (float dt, Registry& r, const std::vector<Entity>& e)
 	 */
 	template <typename... Components>
-	void bindSystem(void (*func)(float, Registry&, const std::vector<Entity>&)) {
-		callbacks.emplace_back([func](float dt, Registry& registry) {
-			auto entities = registry.getEntities<Components...>();
-			func(dt, registry, entities);
+	void bindSystem(void (*func)(float, GameState&, const std::vector<Entity>&)) {
+		callbacks.emplace_back([func](float dt, GameState& gameState) {
+			auto entities = gameState.registry.getEntities<Components...>();
+			func(dt, gameState, entities);
 		});
 	}
 
-	std::vector<std::function<void(float, Registry&)>>& getCallbacks();
+	std::vector<std::function<void(float, GameState&)>>& getCallbacks();
 	Registry& getInitRegistry();
 
 	private:
-	std::vector<std::function<void(float, Registry&)>> callbacks;
+	std::vector<std::function<void(float, GameState&)>> callbacks;
 	usedAssets requiredAssets;
 	Registry initRegistry;
 };

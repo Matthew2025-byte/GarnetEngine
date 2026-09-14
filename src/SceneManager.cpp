@@ -80,6 +80,7 @@ int SDLCALL SceneManager::threadLogic(void* args) {
 	ThreadData& data = *static_cast<ThreadData*>(args);
 	Registry lastBuffer = data.initRegistry;
 	SpriteBuffer spriteBuffer = data.initSpriteBuff;
+	GameState gameState = GameState(lastBuffer);
 
 	constexpr Uint64 target_ns = 16'666'667;  // Target tick time in NS
 	Uint64 last_ticks = SDL_GetTicksNS();	  // last frame for dt
@@ -89,8 +90,9 @@ int SDLCALL SceneManager::threadLogic(void* args) {
 		float dt = (frame_start - last_ticks) / 1'000'000'000.f;
 		last_ticks = frame_start;
 
+
 		for (auto& func : data.callbacks) {
-			func(dt, lastBuffer);
+			func(dt, gameState);
 		}
 		
 

@@ -49,5 +49,5 @@ void collisionCircleCircle(vec2 posA, Garnet::Components::Rigidbody& rigidBodyA,
  * @param entities Vector of entities that match the required components (Transform, Rigidbody,
  * Collider)
  */
-void System(float dt, Garnet::Registry& registry, const std::vector<Garnet::Entity>& entities);
+void System(float dt, GameState& gameState, const std::vector<Garnet::Entity>& entities);
 }  // namespace Garnet::CollisionSystem

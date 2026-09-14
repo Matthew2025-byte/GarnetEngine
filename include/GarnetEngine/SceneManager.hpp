@@ -26,9 +26,9 @@ struct ThreadData {
 	SDL_Mutex* mutexes[2];
 	SDL_AtomicInt renderReg{0};
 	SDL_AtomicInt running{1};
-    std::vector<std::function<void(float, Registry&)>> callbacks;
+    std::vector<std::function<void(float, GameState&)>> callbacks;
 
-	ThreadData(const Registry& referenceRegistry, const SpriteBuffer& spriteBuffer, const std::vector<std::function<void(float, Registry&)>>& callbacks)
+	ThreadData(const Registry& referenceRegistry, const SpriteBuffer& spriteBuffer, const std::vector<std::function<void(float, GameState&)>>& callbacks)
 		: callbacks(callbacks) {
         initRegistry = referenceRegistry;
 		initSpriteBuff = spriteBuffer;

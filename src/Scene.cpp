@@ -10,5 +10,5 @@ void Scene::addAsset(std::string name, assetType type, std::unordered_map<std::s
 };
 
 usedAssets Scene::getRequiredAssets() { return requiredAssets; }
-std::vector<std::function<void(float, Registry&)>>& Scene::getCallbacks() { return callbacks; }
+std::vector<std::function<void(float, GameState&)>>& Scene::getCallbacks() { return callbacks; }
 Registry& Scene::getInitRegistry() { return initRegistry; }

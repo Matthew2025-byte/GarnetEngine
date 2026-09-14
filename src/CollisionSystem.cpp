@@ -64,9 +64,10 @@ void CollisionSystem::collisionCircleCircle(vec2 posA, Components::Rigidbody& ri
 	posB += correction;
 }
 
-void CollisionSystem::System(float dt, Registry& registry,
+void CollisionSystem::System(float dt, GameState& gameState,
 							 const std::vector<Entity>& entities) {
 	const size_t entityCount = entities.size();
+	Registry& registry = gameState.registry;
 
 	for (size_t i = 0; i < entityCount; i++) {
 		auto& transformA = registry.getComponent<Components::Transform>(entities[i]);
