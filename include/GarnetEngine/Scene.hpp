@@ -12,6 +12,7 @@
 
 #include "Registry.hpp"
 #include "Renderer.hpp"
+#include "Input.hpp"
 
 namespace Garnet {
 /**
@@ -42,6 +43,7 @@ struct GameState {
 	 * 
 	 */
 	Registry& registry;
+	Input input;
 
 	GameState(Registry& r) : registry(r) {}
 };

@@ -28,12 +28,16 @@ struct ThreadData {
 	SDL_AtomicInt running{1};
     std::vector<std::function<void(float, GameState&)>> callbacks;
 
+	std::vector<SDL_Event> events;
+	SDL_Mutex* eventMutex;
+
 	ThreadData(const Registry& referenceRegistry, const SpriteBuffer& spriteBuffer, const std::vector<std::function<void(float, GameState&)>>& callbacks)
 		: callbacks(callbacks) {
         initRegistry = referenceRegistry;
 		initSpriteBuff = spriteBuffer;
         mutexes[0] = SDL_CreateMutex();
         mutexes[1] = SDL_CreateMutex();
+		eventMutex = SDL_CreateMutex();
     }
     ~ThreadData() {
         SDL_DestroyMutex(mutexes[0]);
@@ -87,6 +91,9 @@ class SceneManager {
 	std::unordered_map<int, Sprite> getSpriteDelta();
 	TextureManager& getTextureManager() { return textures; }
 
+	void logEvent(SDL_Event event);
+	void pushEvents();
+
 	SceneManager(SDL_Renderer* r)
 		: activeScene(nullptr), updateThread(nullptr), textures(r) {}
 	~SceneManager() {
@@ -106,6 +113,8 @@ class SceneManager {
 	// Variables for update thread
 	std::unique_ptr<ThreadData> sceneData;
 	SDL_Thread* updateThread;
+
+	std::vector<SDL_Event> events;
 
 	static int SDLCALL threadLogic(void* args);
 };

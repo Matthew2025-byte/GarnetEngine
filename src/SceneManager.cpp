@@ -55,7 +55,6 @@ void SceneManager::start(const SpriteBuffer& spriteBuff) {
 		const std::string& textureName = spriteInfo.textureName;
 		TextureID texture = getTextureManager().findTexture(textureName);
 		buff[entity].texture = this->getTextureManager().getTexture(texture);
-		SDL_Log("Loaded texture (%s) as: %i", textureName.c_str(), texture.index);
 	});
 	auto delta = buff.getDelta();
 	buff.push();
@@ -76,6 +75,22 @@ std::unordered_map<int, Sprite> Garnet::SceneManager::getSpriteDelta() {
 	return sceneData->sprite_deltaBuff[SDL_GetAtomicInt(&sceneData->renderReg)];
 }
 
+void Garnet::SceneManager::logEvent(SDL_Event event) {
+	this->events.push_back(event);
+}
+
+void Garnet::SceneManager::pushEvents() {
+	if (!SDL_TryLockMutex(sceneData->eventMutex)) {
+		return;
+	}
+
+	sceneData->events.resize(sceneData->events.size() + this->events.size());
+	sceneData->events.append_range(this->events);
+	this->events.clear();
+
+	SDL_UnlockMutex(sceneData->eventMutex);
+}
+
 int SDLCALL SceneManager::threadLogic(void* args) {
 	ThreadData& data = *static_cast<ThreadData*>(args);
 	Registry lastBuffer = data.initRegistry;
@@ -90,11 +105,38 @@ int SDLCALL SceneManager::threadLogic(void* args) {
 		float dt = (frame_start - last_ticks) / 1'000'000'000.f;
 		last_ticks = frame_start;
 
+		gameState.registry = lastBuffer;
+		while (data.events.size() > 0) {
+			SDL_Event event = data.events.back();
+			switch(event.type) {
+				case SDL_EVENT_KEY_DOWN:
+					gameState.input.keyboard.setKey(event.key.scancode, DOWN);
+					break;
+				case SDL_EVENT_KEY_UP:
+					gameState.input.keyboard.setKey(event.key.scancode, UP);
+					break;
+				case SDL_EVENT_MOUSE_MOTION:
+					gameState.input.mouse.position = { event.motion.x, event.motion.y };
+					gameState.input.mouse.delta = { event.motion.xrel, event.motion.yrel };
+					break;
+				case SDL_EVENT_MOUSE_BUTTON_DOWN:
+					gameState.input.mouse.buttonStates[event.button.button] = true;
+					SDL_Log("Button %i Down", event.button.button);
+					break;
+				case SDL_EVENT_MOUSE_BUTTON_UP:
+					gameState.input.mouse.buttonStates[event.button.button] = false;
+					SDL_Log("Button %i Up", event.button.button);
+					break;
+			}
+
+			data.events.pop_back();
+		}
 
 		for (auto& func : data.callbacks) {
 			func(dt, gameState);
 		}
 		
+		gameState.input.mouse.delta = {0, 0};
 
 		lastBuffer.each<Components::Sprite, Components::Transform>([&](Entity entity, Components::Sprite sprite, Components::Transform& transform) {
 			spriteBuffer[sprite.id].transform = transform;

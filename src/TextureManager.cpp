@@ -32,10 +32,8 @@ Garnet::TextureID Garnet::TextureManager::Load(std::string file, std::unordered_
 
         auto it = TextureCache.find(cache_key);
         if (it != TextureCache.end()) {
-            SDL_Log("Loading from cache: %s", cache_key.c_str());
             return it->second;
         }
-        else SDL_Log("Creating texture: %s", cache_key.c_str());
 
         texture = LoadTextureFromSVG(filepath.string().c_str(), width);
     }
@@ -59,7 +57,7 @@ Garnet::TextureID Garnet::TextureManager::Load(std::string file, std::unordered_
     TextureCache.emplace(cache_key, id);
     Textures.push_back(texture);
 
-    SDL_Log("Created Texture at %i", id.index);
+    SDL_Log("Created Texture: %s - index %i", cache_key.c_str(), id.index);
     return id;
 }
 
