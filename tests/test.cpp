@@ -1,10 +1,66 @@
 #include <GarnetEngine/Registry.hpp>
+#include <GarnetEngine/SceneManger.hpp>
 #include <doctest/doctest.h>
 #include <algorithm>
 
 struct health { int h = 100; };
 struct pos { int x=0; int y=0; };
 
+void increment(float, Garnet::Entity, Counter& c) {
+    c.value++;
+}
+
+TEST_CASE("Scene bind updates matching entities")
+{
+    Garnet::Scene scene;
+
+    auto& registry = scene.getInitRegistry();
+
+    auto e1 = registry.createEntity();
+    auto e2 = registry.createEntity();
+
+    registry.addComponent<Counter>(e1);
+    registry.addComponent<Counter>(e2);
+
+    scene.bind<Counter>(increment);
+
+    for (auto& callback : scene.getCallbacks()) {
+        callback(1.0f, registry);
+    }
+
+    CHECK_EQ(registry.getComponent<Counter>(e1).value, 1);
+    CHECK_EQ(registry.getComponent<Counter>(e2).value, 1);
+}
+
+static int count = 0;
+void countEntities(
+    float,
+    Garnet::Registry&,
+    const std::vector<Garnet::Entity>& entities)
+{
+    count = entities.size();
+}
+TEST_CASE("Scene bindSystem gets filtered entities")
+{
+    count = 0;
+
+    Garnet::Scene scene;
+    auto& registry = scene.getInitRegistry();
+
+    auto e1 = registry.createEntity();
+    auto e2 = registry.createEntity();
+
+    registry.addComponent<Garnet::Components::Transform>(e1);
+    registry.addComponent<Garnet::Components::Transform>(e2);
+
+    scene.bindSystem<Garnet::Components::Transform>(countEntities);
+
+    for (auto& callback : scene.getCallbacks()) {
+        callback(0.0f, registry);
+    }
+
+    CHECK_EQ(count, 2);
+}
 TEST_CASE("Test Registry") {
     Garnet::Registry registry;
     Garnet::Entity e1 = registry.createEntity();
