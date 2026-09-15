@@ -105,15 +105,14 @@ int SDLCALL SceneManager::threadLogic(void* args) {
 		float dt = (frame_start - last_ticks) / 1'000'000'000.f;
 		last_ticks = frame_start;
 
-		gameState.registry = lastBuffer;
 		while (data.events.size() > 0) {
 			SDL_Event event = data.events.back();
 			switch(event.type) {
 				case SDL_EVENT_KEY_DOWN:
-					gameState.input.keyboard.setKey(event.key.scancode, DOWN);
+					gameState.input.keyboard.setKey(event.key.scancode, KeyEvent::DOWN);
 					break;
 				case SDL_EVENT_KEY_UP:
-					gameState.input.keyboard.setKey(event.key.scancode, UP);
+					gameState.input.keyboard.setKey(event.key.scancode, KeyEvent::UP);
 					break;
 				case SDL_EVENT_MOUSE_MOTION:
 					gameState.input.mouse.position = { event.motion.x, event.motion.y };
@@ -121,11 +120,9 @@ int SDLCALL SceneManager::threadLogic(void* args) {
 					break;
 				case SDL_EVENT_MOUSE_BUTTON_DOWN:
 					gameState.input.mouse.buttonStates[event.button.button] = true;
-					SDL_Log("Button %i Down", event.button.button);
 					break;
 				case SDL_EVENT_MOUSE_BUTTON_UP:
 					gameState.input.mouse.buttonStates[event.button.button] = false;
-					SDL_Log("Button %i Up", event.button.button);
 					break;
 			}
 
@@ -156,7 +153,7 @@ int SDLCALL SceneManager::threadLogic(void* args) {
 		Uint64 elapsed = frame_end - frame_start;
 		// delay elapsed to 1/60s
 		if (elapsed < target_ns) {
-			SDL_DelayNS(elapsed - target_ns);
+			SDL_DelayNS(target_ns - elapsed);
 		}
 	}
 	return 0;
