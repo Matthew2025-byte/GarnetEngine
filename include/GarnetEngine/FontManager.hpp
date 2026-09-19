@@ -11,10 +11,11 @@ class Garnet::FontManager {
     TTF_TextEngine* textEngine;
     std::unordered_map<std::string, TTF_Font*> fonts;
 
-    std::filesystem::path fontDir;
+    std::filesystem::path root_folder;
 
     public:
     FontManager(SDL_Renderer* renderer, std::filesystem::path fontDir);
+    FontManager(SDL_Renderer* renderer);
 
     /**
      * @brief Loads a ttc font into memory
@@ -33,4 +34,13 @@ class Garnet::FontManager {
      * @returns A pointer to the requested font
      */
     TTF_Font* getFont(const std::string& font) const;
+
+    /**
+     * @brief Gets the textEngine variable
+     * 
+     * Added for rendering
+     * 
+     * @return TTF_TextEngine* 
+     */
+    TTF_TextEngine* getEngine() { return textEngine; }
 };

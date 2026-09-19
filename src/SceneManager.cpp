@@ -95,7 +95,7 @@ int SDLCALL SceneManager::threadLogic(void* args) {
 	ThreadData& data = *static_cast<ThreadData*>(args);
 	Registry lastBuffer = data.initRegistry;
 	SpriteBuffer spriteBuffer = data.initSpriteBuff;
-	GameState gameState = GameState(lastBuffer);
+	GameState gameState = GameState(lastBuffer, spriteBuffer);
 
 	constexpr Uint64 target_ns = 16'666'667;  // Target tick time in NS
 	Uint64 last_ticks = SDL_GetTicksNS();	  // last frame for dt

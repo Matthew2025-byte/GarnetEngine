@@ -43,9 +43,10 @@ struct GameState {
 	 * 
 	 */
 	Registry& registry;
+	SpriteBuffer& spriteBuffer;
 	Input input;
 
-	GameState(Registry& r) : registry(r) {}
+	GameState(Registry& r, SpriteBuffer& s) : registry(r), spriteBuffer(s) {}
 };
 
 /**
