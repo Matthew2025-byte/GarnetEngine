@@ -16,16 +16,6 @@ void SceneManager::addScene(std::string name, std::unique_ptr<Scene> scene) {
     }
 }
 
-void SceneManager::loadScene(std::string name) {
-	// Load scene to availableScenes from a file
-	throw std::runtime_error("loadScene Not yet implemented");
-}
-
-void SceneManager::saveScene(std::string name) {
-	// Save scene to a file
-	throw std::runtime_error("saveScene Not yet implemented");
-}
-
 void Garnet::SceneManager::setActiveScene(std::string name) {
 	activeScene = availableScenes[name].get();
 	usedAssets assets = activeScene->getRequiredAssets();
@@ -38,18 +28,25 @@ void Garnet::SceneManager::setActiveScene(std::string name) {
 	}
 }
 
-void SceneManager::switchScene(std::string name) {
-	// Save scene
-	// Load new scene
-	throw std::runtime_error("switchScene Not yet implemented");
+void SceneManager::exitScene() {
+	if (updateThread) {
+		SDL_SetAtomicInt(&sceneData->running, 0);
+		SDL_WaitThread(updateThread, nullptr);
+	}
+	sceneData.reset();
+	return;
 }
 
-void SceneManager::start(const SpriteBuffer& spriteBuff) {
-    SDL_Log("Initializing Scene");
+void SceneManager::start() {
+	SDL_Log("Initializing Scene");
 	auto& callbacks = activeScene->getCallbacks();
 	auto& initRegistry = activeScene->getInitRegistry();
-	SpriteBuffer buff = spriteBuff;
-	SDL_Log("Loading %i sprites", buff.getSprites().size());
+
+	SpriteBuffer buff;
+	initRegistry.each<Components::Sprite, Components::Transform>([&](Entity entity, Components::Sprite& sprite, Components::Transform& transform) {
+		buff.addSprite(entity, Sprite(sprite.textureName, transform));
+	});
+	SDL_Log("Loaded %i sprites", buff.getDelta().size());
 
 	sceneData = std::make_unique<ThreadData>(activeScene->getInitRegistry(), buff, callbacks);
 

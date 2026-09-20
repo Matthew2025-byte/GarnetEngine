@@ -51,7 +51,6 @@ struct ThreadData {
  */
 class SceneManager {
 	public:
-	// Scene Handling
 	/**
 	 * @brief Adds a scene object to game memory
 	 *
@@ -60,19 +59,6 @@ class SceneManager {
 	 */
 	void addScene(std::string name, std::unique_ptr<Scene> scene);
 	/**
-	 * @brief Loads a scene into memory
-	 *
-	 * @param name Name of the scene
-	 */
-	void loadScene(std::string name);
-	/**
-	 * @brief Saves a scene to a file
-	 *
-	 * @param name Name of the scene
-	 */
-	void saveScene(std::string name);
-
-	/**
 	 * @brief Set the Active Scene object
 	 * 
 	 * @param name Name of the scene to load
@@ -80,14 +66,13 @@ class SceneManager {
 	void setActiveScene(std::string name);
 
 	/**
-	 * @brief Saves current scene state and loads the new scene
-	 *
-	 * @param name Scene to switch to Load
+	 * @brief Safely shuts down the current scene
+	 * 
 	 */
-	void switchScene(std::string name);
+	void exitScene();
 
 	// Game loop
-	void start(const SpriteBuffer& spriteBuff);
+	void start();
 	std::unordered_map<int, Sprite> getSpriteDelta();
 	TextureManager& getTextureManager() { return textures; }
 
@@ -97,10 +82,7 @@ class SceneManager {
 	SceneManager(SDL_Renderer* r)
 		: activeScene(nullptr), updateThread(nullptr), textures(r) {}
 	~SceneManager() {
-		if (updateThread) {
-			SDL_SetAtomicInt(&sceneData->running, 0);
-			SDL_WaitThread(updateThread, nullptr);
-		}
+		exitScene();
 	}
 
 	private:
