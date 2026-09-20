@@ -36,6 +36,14 @@ void SceneManager::exitScene() {
 	sceneData.reset();
 	return;
 }
+void SceneManager::switchScene(std::string name) {
+	if (this->activeScene->saveOnExit) {
+		throw std::runtime_error("Save Scene not implemented");
+	}
+	exitScene();
+	setActiveScene(name);
+	start();
+}
 
 void SceneManager::start() {
 	SDL_Log("Initializing Scene");

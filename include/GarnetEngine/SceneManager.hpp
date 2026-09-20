@@ -70,6 +70,7 @@ class SceneManager {
 	 * 
 	 */
 	void exitScene();
+	void switchScene(std::string name);
 
 	// Game loop
 	void start();

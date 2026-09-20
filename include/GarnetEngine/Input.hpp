@@ -10,7 +10,11 @@ enum class KeyEvent : uint8_t {
 };
 
 struct Keyboard {
-    std::array<KeyEvent, SDL_SCANCODE_COUNT> keyboard{ KeyEvent::UP };
+    std::array<KeyEvent, SDL_SCANCODE_COUNT> keyboard = []() {
+        std::array<KeyEvent, SDL_SCANCODE_COUNT> arr;
+        arr.fill(KeyEvent::UP);
+        return arr;
+    }();
 
     /**
      * @brief Set a scancode position
@@ -29,6 +33,10 @@ struct Keyboard {
      */
     KeyEvent getKey(SDL_Scancode code) const {
         return keyboard[static_cast<size_t>(code)];
+    }
+
+    Keyboard() {
+        keyboard.fill(KeyEvent::UP);
     }
 };
 

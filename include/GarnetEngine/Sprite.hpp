@@ -49,6 +49,12 @@ class SpriteBuffer {
 	 */
 	void push();
 
+	/**
+	 * @brief Clears the SpriteBuffer
+	 * 
+	 */
+	void clear();
+
 	const std::unordered_map<int, Sprite> getDelta() const { return spriteDelta; }
 	std::vector<Sprite>& getSprites() { return sprites; }
 	void setDelta(std::unordered_map<int, Sprite> delta);

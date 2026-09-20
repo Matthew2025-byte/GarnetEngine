@@ -60,6 +60,7 @@ struct GameState {
  */
 class Scene {
 	public:
+	bool saveOnExit = false;
 	/**
 	 * @brief Adds an asset to the asset list
 	 *

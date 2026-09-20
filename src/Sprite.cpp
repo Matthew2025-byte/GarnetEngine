@@ -13,6 +13,13 @@ void SpriteBuffer::push() {
 	push(this->spriteDelta);
 	spriteDelta.clear();
 }
+
+void Garnet::SpriteBuffer::clear() {
+	this->entity_index.clear();
+	this->sprites.clear();
+	this->spriteDelta.clear();
+}
+
 void SpriteBuffer::setDelta(std::unordered_map<int, Sprite> delta) {
 	this->spriteDelta.clear();
 	this->spriteDelta = delta;
