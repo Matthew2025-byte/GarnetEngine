@@ -18,12 +18,17 @@
 namespace Garnet {
 
 struct Sprite {
-	SDL_Texture* texture;
+	TextureID id;
 	Components::Transform transform;
+	std::string textureName;
+	
 
 	bool operator==(const Sprite& other) {
-		return this->texture == other.texture && this->transform == other.transform;
+		return this->id.index == other.id.index && this->transform == other.transform;
 	}
+	Sprite(std::string textureName, Components::Transform transform)
+		: textureName(textureName), transform(transform) {}
+	Sprite() = default;
 };
 
 /**
@@ -37,42 +42,20 @@ class SpriteBuffer {
 	 *
 	 * @param delta Buffer to apply
 	 */
-	void push(const std::unordered_map<int, Sprite>& delta) {
-		for (auto& [index, sprite] : delta) {
-			if (index >= sprites.size()) {
-				sprites.resize(index + 1);
-			}
-			sprites[index] = sprite;
-		}
-	}
+	void push(const std::unordered_map<int, Sprite>& delta);
 	/**
 	 * @brief Applies the internal delta buffer and clears it
 	 *
 	 */
-	void push() {
-		push(this->spriteDelta);
-		spriteDelta.clear();
-	}
+	void push();
 
 	const std::unordered_map<int, Sprite> getDelta() const { return spriteDelta; }
 	std::vector<Sprite>& getSprites() { return sprites; }
-	void setDelta(std::unordered_map<int, Sprite> delta) {
-		spriteDelta.clear();
-		spriteDelta = delta;
-	}
-	void setSprites(std::vector<Sprite> sprites) { this->sprites = sprites; }
-	void addSprite(Entity entity, Sprite sprite) {
-		entity_index[entity] = sprites.size();
-		sprites.push_back(sprite);
-	}
+	void setDelta(std::unordered_map<int, Sprite> delta);
+	void setSprites(std::vector<Sprite> sprites);
+	void addSprite(Entity entity, Sprite sprite);
 
-	Sprite& operator[](Entity entity) {
-		auto it = entity_index.find(entity);
-		assert(it != entity_index.end() && "No sprite found with requested entity");
-		Entity index = entity_index[entity];
-		spriteDelta[index] = sprites[index];
-		return spriteDelta[index];
-	}
+	Sprite& operator[](Entity entity);
 
 	private:
 	std::unordered_map<Entity, int> entity_index;

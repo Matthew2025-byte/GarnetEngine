@@ -30,16 +30,16 @@ Garnet::TextureID Garnet::TextureManager::Load(std::string file, std::unordered_
         int width = std::stoi(properties["width"]);
         cache_key = name + "_" + std::to_string(width) + ext;
 
-        auto it = TextureCache.find(cache_key);
-        if (it != TextureCache.end()) {
+        auto it = this->textureCache.find(cache_key);
+        if (it != this->textureCache.end()) {
             return it->second;
         }
 
         texture = LoadTextureFromSVG(filepath.string().c_str(), width);
     }
     else {
-        auto it = TextureCache.find(file);
-        if (it != TextureCache.end()) {
+        auto it = this->textureCache.find(file);
+        if (it != this->textureCache.end()) {
             SDL_Log("Loading from cache: %s", cache_key);
             return it->second;
         }
@@ -53,17 +53,17 @@ Garnet::TextureID Garnet::TextureManager::Load(std::string file, std::unordered_
         return InvalidTexture;
     }
 
-    TextureID id(static_cast<uint32_t>(Textures.size()));
-    TextureCache.emplace(cache_key, id);
-    Textures.push_back(texture);
+    TextureID id(static_cast<uint32_t>(this->textures.size()));
+    this->textureCache.emplace(cache_key, id);
+    this->textures.push_back(texture);
 
     SDL_Log("Created Texture: %s - index %i", cache_key.c_str(), id.index);
     return id;
 }
 
 Garnet::TextureID Garnet::TextureManager::findTexture(std::string name) {
-    auto it = TextureCache.find(name);
-    if (it != TextureCache.end()) {
+    auto it = this->textureCache.find(name);
+    if (it != this->textureCache.end()) {
         return it->second;
     }
     SDL_Log("Unable to find texture: %s", name.c_str());
@@ -73,10 +73,14 @@ Garnet::TextureID Garnet::TextureManager::findTexture(std::string name) {
 
 SDL_Texture* Garnet::TextureManager::getTexture(Garnet::TextureID id) {
 #ifdef _DEBUG
-	if (id.index >= Textures.size())
-		SDL_Log("Attempted to access Texture[%i] - Size is %i", id.index, Textures.size());
-	return Textures.at(id.index);
+	if (id.index >= this->textures.size())
+		SDL_Log("Attempted to access Texture[%i] - Size is %i", id.index, this->textures.size());
+	return this->textures.at(id.index);
 #else
-	return Textures[id.index];
+	return this->textures[id.index];
 #endif
+}
+
+SDL_Texture* Garnet::TextureManager::getTexture(std::string name) {
+    return getTexture(findTexture(name));
 }

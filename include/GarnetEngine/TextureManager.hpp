@@ -15,31 +15,23 @@
 #include <filesystem>
 
 namespace Garnet {
-    /**
-     * @brief Texture component for rendering
-     * 
-     */
-    struct TextureID {
-        uint32_t index = 0;
+/**
+ * @brief Texture component for rendering
+ * 
+ */
+struct TextureID {
+    uint32_t index = 0;
 
-        bool isValid() {
-            return (index != NULL);
-        }
-    };
-    constexpr TextureID InvalidTexture = {0};
-}
+    bool isValid() {
+        return (index != NULL);
+    }
+};
+constexpr TextureID InvalidTexture = {0};
 
-
-
-
-
-#define GARNET_SVG_RASTER_WIDTH "Garnet.LoadFile.SVG.Raster_Width"
-
-namespace Garnet {
 
 class TextureManager {
-    std::unordered_map<std::string, TextureID> TextureCache;
-    std::vector<SDL_Texture*> Textures;
+    std::unordered_map<std::string, TextureID> textureCache;
+    std::vector<SDL_Texture*> textures;
 
     SDL_Renderer* renderer;
     std::filesystem::path root_folder;
@@ -47,10 +39,10 @@ class TextureManager {
     SDL_Texture* LoadTextureFromSVG(const char* filepath, int size);
 
     public:
-    explicit TextureManager(SDL_Renderer* renderer) 
+    TextureManager(SDL_Renderer* renderer) 
         : TextureManager(renderer, "assets/textures/") {}
-    explicit TextureManager(SDL_Renderer* renderer, const char* texture_root_folder) :
-        renderer(renderer), root_folder(std::filesystem::path(texture_root_folder)) { Textures.push_back(nullptr); }
+    TextureManager(SDL_Renderer* renderer, const char* texture_root_folder) :
+        renderer(renderer), root_folder(std::filesystem::path(texture_root_folder)) { textures.push_back(nullptr); }
 
     /**
      * @brief Loads a texture into memory
@@ -79,6 +71,7 @@ class TextureManager {
      * @returns An pointer to a SDL_Texture
      */
     SDL_Texture* getTexture(TextureID id);
+    SDL_Texture* getTexture(std::string name);
 };
 
 }

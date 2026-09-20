@@ -3,7 +3,6 @@
 void Garnet::Renderer::RenderTexture(SDL_Renderer* renderer, Garnet::Components::Transform transform, SDL_Texture* texture) {
     #ifdef _DEBUG
     if (!texture) {
-        SDL_Log("Texture is nullptr: %s", SDL_GetError());
         throw std::runtime_error("Texture is nullptr");
     }
     #endif
@@ -16,6 +15,10 @@ void Garnet::Renderer::RenderTexture(SDL_Renderer* renderer, Garnet::Components:
 
 void Garnet::Renderer::renderSprites(SpriteBuffer sprites) {
     for (auto sprite : sprites.getSprites()) {
-        RenderTexture(this->renderer, sprite.transform, sprite.texture);
+        if (!sprite.id.isValid()) {
+            sprite.id = this->textureManager.findTexture(sprite.textureName);
+        }
+        SDL_Texture* texture = this->textureManager.getTexture(sprite.id);
+        RenderTexture(this->renderer, sprite.transform, texture);
     }
 }
