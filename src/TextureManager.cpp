@@ -67,7 +67,8 @@ Garnet::TextureID Garnet::TextureManager::findTexture(std::string name) {
         return it->second;
     }
     SDL_Log("Unable to find texture: %s", name.c_str());
-    return InvalidTexture;
+    SDL_Log("An error occured while finding texture: %s", SDL_GetError());
+    throw std::runtime_error("Unable to find texture");
 }
 
 SDL_Texture* Garnet::TextureManager::getTexture(Garnet::TextureID id) {

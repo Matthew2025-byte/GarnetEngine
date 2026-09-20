@@ -4,7 +4,7 @@ void Garnet::Renderer::RenderTexture(SDL_Renderer* renderer, Garnet::Components:
     #ifdef _DEBUG
     if (!texture) {
         SDL_Log("Texture is nullptr: %s", SDL_GetError());
-        return;
+        throw std::runtime_error("Texture is nullptr");
     }
     #endif
     float width = static_cast<float>(texture->w);
