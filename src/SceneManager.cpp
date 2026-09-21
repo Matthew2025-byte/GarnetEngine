@@ -38,8 +38,10 @@ void SceneManager::exitScene() {
 }
 void SceneManager::switchScene(std::string name) {
 	if (this->activeScene->saveOnExit) {
-		throw std::runtime_error("Save Scene not implemented");
+		SDL_Log("Scene save not implemented");
 	}
+	SDL_Log("Switching from scene [%s] to [%s]", activeSceneName.c_str(), name.c_str());
+
 	exitScene();
 	setActiveScene(name);
 	start();
