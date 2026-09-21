@@ -27,6 +27,7 @@ add_library(GarnetEngine SHARED
     src/Renderer.cpp
     src/Scene.cpp
     src/SceneManager.cpp
+    src/Sprite.cpp
 )
 
 # Set include directories

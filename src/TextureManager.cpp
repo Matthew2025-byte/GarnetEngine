@@ -14,52 +14,73 @@ SDL_Texture* Garnet::TextureManager::LoadTextureFromSVG(const char* filepath, in
     }
 
 
-Garnet::TextureID Garnet::TextureManager::Load(const char* file, std::unordered_map<std::string, std::string> properties) {
-    auto it = TextureCache.find(file);
-    if (it != TextureCache.end()) return it->second;
-
+Garnet::TextureID Garnet::TextureManager::Load(std::string file, std::unordered_map<std::string, std::string> properties) {
     std::filesystem::path filepath = root_folder / file;
     std::string ext = filepath.extension().string();
+    std::string name = filepath.stem().string();
     if (!std::filesystem::exists(filepath)) {
         SDL_Log("Failed to find file: %s", std::filesystem::absolute(filepath).string().c_str());
         return InvalidTexture;
     }
 
     SDL_Texture* texture;
+    std::string cache_key;
+
     if (ext == ".svg") {
-        int width = 10;
-        if (properties.contains("width")) {
-            width = std::stoi(properties["width"]);
+        int width = std::stoi(properties["width"]);
+        cache_key = name + "_" + std::to_string(width) + ext;
+
+        auto it = this->textureCache.find(cache_key);
+        if (it != this->textureCache.end()) {
+            return it->second;
         }
+
         texture = LoadTextureFromSVG(filepath.string().c_str(), width);
     }
     else {
+        auto it = this->textureCache.find(file);
+        if (it != this->textureCache.end()) {
+            SDL_Log("Loading from cache: %s", cache_key);
+            return it->second;
+        }
+        cache_key = std::move(file);
+
         texture = IMG_LoadTexture(renderer, filepath.string().c_str());
     }
-    if (!texture) { SDL_Log("Failed to create texture: %s", SDL_GetError()); return InvalidTexture; }
-    TextureID id { static_cast<uint32_t>(Textures.size()) };
-    TextureCache.emplace(file, id);
-    Textures.push_back(texture);
+    
+    if (!texture) {
+        SDL_Log("Failed to create texture: %s", SDL_GetError());
+        return InvalidTexture;
+    }
 
-    SDL_Log("Created Texture at %i", id.index);
+    TextureID id(static_cast<uint32_t>(this->textures.size()));
+    this->textureCache.emplace(cache_key, id);
+    this->textures.push_back(texture);
+
+    SDL_Log("Created Texture: %s - index %i", cache_key.c_str(), id.index);
     return id;
 }
 
 Garnet::TextureID Garnet::TextureManager::findTexture(std::string name) {
-    auto it = TextureCache.find(name);
-    if (it != TextureCache.end()) {
+    auto it = this->textureCache.find(name);
+    if (it != this->textureCache.end()) {
         return it->second;
     }
     SDL_Log("Unable to find texture: %s", name.c_str());
-    return InvalidTexture;
+    SDL_Log("An error occured while finding texture: %s", SDL_GetError());
+    throw std::runtime_error("Unable to find texture");
 }
 
 SDL_Texture* Garnet::TextureManager::getTexture(Garnet::TextureID id) {
 #ifdef _DEBUG
-	if (id.index >= Textures.size())
-		SDL_Log("Attempted to access Texture[%i] - Size is %i", id.index, Textures.size());
-	return Textures.at(id.index);
+	if (id.index >= this->textures.size())
+		SDL_Log("Attempted to access Texture[%i] - Size is %i", id.index, this->textures.size());
+	return this->textures.at(id.index);
 #else
-	return Textures[id.index];
+	return this->textures[id.index];
 #endif
+}
+
+SDL_Texture* Garnet::TextureManager::getTexture(std::string name) {
+    return getTexture(findTexture(name));
 }

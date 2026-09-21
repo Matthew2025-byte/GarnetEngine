@@ -11,6 +11,7 @@
 
 #include "Registry.hpp"
 #include "Scene.hpp"
+#include "Sprite.hpp"
 
 namespace Garnet {
 /**
@@ -19,18 +20,24 @@ namespace Garnet {
  *
  */
 struct ThreadData {
-	Garnet::Registry registries[2];
+	Garnet::Registry initRegistry;
+	SpriteBuffer initSpriteBuff;
+	std::unordered_map<int, Sprite> sprite_deltaBuff[2];
 	SDL_Mutex* mutexes[2];
 	SDL_AtomicInt renderReg{0};
 	SDL_AtomicInt running{1};
-    std::vector<std::function<void(float, Registry&)>> callbacks;
+    std::vector<std::function<void(float, GameState&)>> callbacks;
 
-	ThreadData(const Registry& referenceRegistry, const std::vector<std::function<void(float, Registry&)>>& callbacks)
+	std::vector<SDL_Event> events;
+	SDL_Mutex* eventMutex;
+
+	ThreadData(const Registry& referenceRegistry, const SpriteBuffer& spriteBuffer, const std::vector<std::function<void(float, GameState&)>>& callbacks)
 		: callbacks(callbacks) {
-        registries[0] = referenceRegistry;
-        registries[1] = referenceRegistry;
+        initRegistry = referenceRegistry;
+		initSpriteBuff = spriteBuffer;
         mutexes[0] = SDL_CreateMutex();
         mutexes[1] = SDL_CreateMutex();
+		eventMutex = SDL_CreateMutex();
     }
     ~ThreadData() {
         SDL_DestroyMutex(mutexes[0]);
@@ -44,27 +51,13 @@ struct ThreadData {
  */
 class SceneManager {
 	public:
-	// Scene Handling
 	/**
 	 * @brief Adds a scene object to game memory
 	 *
 	 * @param name Name of the scene
 	 * @param scene Scene object
 	 */
-	void addScene(std::string name, Scene& scene);
-	/**
-	 * @brief Loads a scene into memory
-	 *
-	 * @param name Name of the scene
-	 */
-	void loadScene(std::string name);
-	/**
-	 * @brief Saves a scene to a file
-	 *
-	 * @param name Name of the scene
-	 */
-	void saveScene(std::string name);
-
+	void addScene(std::string name, std::unique_ptr<Scene> scene);
 	/**
 	 * @brief Set the Active Scene object
 	 * 
@@ -73,38 +66,38 @@ class SceneManager {
 	void setActiveScene(std::string name);
 
 	/**
-	 * @brief Saves current scene state and loads the new scene
-	 *
-	 * @param name Scene to switch to
+	 * @brief Safely shuts down the current scene
+	 * 
 	 */
+	void exitScene();
 	void switchScene(std::string name);
 
 	// Game loop
 	void start();
-	Registry& getRenderRegistry();
+	std::unordered_map<int, Sprite> getSpriteDelta();
 	TextureManager& getTextureManager() { return textures; }
 
-	void setActiveScene(Scene* scene) { activeScene = scene; }
+	void logEvent(SDL_Event event);
+	void pushEvents();
 
 	SceneManager(SDL_Renderer* r)
 		: activeScene(nullptr), updateThread(nullptr), textures(r) {}
 	~SceneManager() {
-		if (updateThread) {
-			SDL_SetAtomicInt(&sceneData->running, 0);
-			SDL_WaitThread(updateThread, nullptr);
-		}
+		exitScene();
 	}
 
 	private:
 	std::string activeSceneName;
 	Scene* activeScene;
-	std::unordered_map<std::string, Scene*> availableScenes;
+	std::unordered_map<std::string, std::unique_ptr<Scene>> availableScenes;
 
 	TextureManager textures;
 
 	// Variables for update thread
 	std::unique_ptr<ThreadData> sceneData;
 	SDL_Thread* updateThread;
+
+	std::vector<SDL_Event> events;
 
 	static int SDLCALL threadLogic(void* args);
 };
