@@ -7,16 +7,18 @@
  *
  */
 #pragma once
-#include <algorithm>
-#include <any>
-#include <cstdint>
-#include <functional>
-#include <limits>
-#include <stdexcept>
-#include <tuple>
-#include <typeindex>
-#include <unordered_map>
 #include <vector>
+#include <array>
+#include <memory>
+#include <limits>
+#include <cstdint>
+#include <unordered_map>
+#include <typeindex>
+#include <any>
+#include <functional>
+#include <stdexcept>
+#include <algorithm>
+#include <cassert>
 
 namespace Garnet {
 using Entity = uint32_t;
@@ -25,68 +27,43 @@ template <typename T>
 struct TypeTag {
 	using type = T;
 };
-// Component Pool
+
+struct IComponentPool {
+	virtual ~IComponentPool() = default;
+	virtual std::unique_ptr<IComponentPool> clone() const = 0;
+};
+
 /**
  * @brief relationship between entities and components
  * @tparam T The type of component to store
  */
-template <typename T>
-class ComponentPool {
-	std::vector<Entity> entities;
-	std::vector<T> components;
-
+template <typename T, size_t PageSize = 1024>
+class ComponentPool : public IComponentPool {
 	public:
-	/**
-	 * @brief Adds a new component to an entity
-	 *
-	 * @param entity Entity to add a component to
-	 * @param component Component data to add
-	 * @returns A reference to the added component
-	 * @throws std::runtime error if the entity already has the component
-	 *
-	 * @warning Returned reference is only valid until another component of the same type is added
-	 * to the registry.
-	 */
-	T& add(Entity entity, const T& component) {
-		if (contains(entity)) {
-			throw std::runtime_error("Entity already has this component");
+	ComponentPool() = default;
+	ComponentPool(const ComponentPool& other)
+		: sparse(other.sparse), count(other.count) {
+			dense.reserve(other.dense.size());
+			for (auto& page : other.dense)
+				dense.push_back(page ? std::make_unique<std::array<Entity, PageSize>>(*page) : nullptr);
+			data.reserve(other.data.size());
+			for (auto& page : other.data)
+				data.push_back(page ? std::make_unique<std::array<T, PageSize>>(*page) : nullptr);
 		}
-		entities.push_back(entity);
-		components.push_back(component);
-		return components.back();
-	}
+	ComponentPool(ComponentPool&&) = default;
+	ComponentPool& operator=(ComponentPool&&) = default;
+	ComponentPool& operator=(const ComponentPool&) = delete;
 
-	/**
-	 * @brief Removes an entity from the component pool
-	 *
-	 * @param entity Entity to remove from the component pool
-	 * @returns True if removed, false if the entity wasn't present
-	 */
-	bool remove(const Entity entity) {
-		for (size_t i = 0; i < entities.size(); i++) {
-			if (entity == entities[i]) {
-				entities[i] = entities.back();
-				components[i] = components.back();
-				entities.pop_back();
-				components.pop_back();
-				return true;
-			}
-		}
-		return false;
+	std::unique_ptr<IComponentPool> clone() const override {
+		return std::make_unique<ComponentPool<T, PageSize>>(*this);
 	}
-
 	/**
 	 * @brief Checks if an entity is in the component pool
 	 * @param entity Entity to check
 	 * @returns True if present
 	 */
-	bool contains(Entity entity) const {
-		for (size_t i = 0; i < entities.size(); i++) {
-			if (entities[i] == entity) {
-				return true;
-			}
-		}
-		return false;
+	bool contains(Entity e) const {
+		return e < sparse.size() && sparse[e] != INVALID;
 	}
 
 	/**
@@ -94,15 +71,88 @@ class ComponentPool {
 	 *
 	 * @param entity Entity to get a component from
 	 * @returns A reference to a component
-	 * @throws std::runtime_error if the entity does not have the component
 	 */
-	T& get(Entity entity) {
-		for (size_t i = 0; i < entities.size(); i++) {
-			if (entities[i] == entity) {
-				return components[i];
-			}
+	T& get(Entity e) {
+		assert(contains(e));
+		size_t pos = sparse[e];
+		return (*data[pos / PageSize])[pos % PageSize];
+	}
+
+	/**
+	 * @brief Adds a new component to an entity
+	 *
+	 * @param entity Entity to add a component to
+	 * @param component Component data to add
+	 * @returns A reference to the added component
+	 */
+	T& add(Entity e, T value) {
+		if (e >= sparse.size())
+			sparse.resize(e + 1, INVALID);
+
+		if (sparse[e] != INVALID) {
+			size_t pos = sparse[e];
+			(*data[pos / PageSize])[pos % PageSize] = std::move(value);
+			return (*data[pos / PageSize])[pos % PageSize];
 		}
-		throw std::runtime_error("Entity does not have this component");
+		size_t pos = count;
+		size_t page = pos / PageSize;
+		size_t slot = pos % PageSize;
+
+		if (page >= dense.size()) {
+			dense.resize(page + 1);
+			data.resize(page + 1);
+		}
+		if (!dense[page]) {
+			dense[page] = std::make_unique<std::array<Entity, PageSize>>();
+			data[page] = std::make_unique<std::array<T, PageSize>>();
+		}
+
+		(*dense[page])[slot] = e;
+		(*data[page])[slot] = std::move(value);
+		sparse[e] = static_cast<uint32_t>(pos);
+		++count;
+
+		return (*data[page])[slot];
+	}
+	
+	/**
+	 * @brief Removes an entity from the component pool
+	 *
+	 * @param entity Entity to remove from the component pool
+	 */
+	void remove(Entity e) {
+		assert(contains(e));
+		size_t pos = sparse[e];
+		size_t lastPos = count - 1;
+
+		size_t page = pos / PageSize;
+		size_t slot = pos % PageSize;
+		size_t lastPage = lastPos / PageSize;
+		size_t lastSlot = lastPos % PageSize;
+
+		Entity lastEntity = (*dense[lastPage])[lastSlot];
+
+		(*dense[page])[slot] = lastEntity;
+		(*data[page])[slot] = std::move((*data[lastPage])[lastSlot]);
+
+		sparse[lastEntity] = static_cast<uint32_t>(pos);
+		sparse[e] = INVALID;
+
+		--count;
+	}
+
+	/**
+	 * @brief Gets all registered entities
+	 *
+	 * @return std::vector<Entity> of all assigned entities
+	 */
+	std::vector<Entity> getEntities() {
+		std::vector<Entity> result;
+		result.reserve(count);
+		for (size_t pos = 0; pos < count; ++pos) {
+			result.push_back((*dense[pos / PageSize])[pos % PageSize]);
+		}
+		return result;
 	}
 
 	/**
@@ -110,15 +160,8 @@ class ComponentPool {
 	 *
 	 * @return Integer value representing the number of valid entities
 	 */
-	size_t size() { return entities.size(); }
-
-	/**
-	 * @brief Get the Entities object
-	 *
-	 * @return std::vector<Entity>
-	 */
-	std::vector<Entity> getEntities() { return entities; }
-
+	size_t size() const { return count; }
+	
 	/**
 	 * @brief Executes a provided method on all entries in the component pool
 	 *
@@ -127,18 +170,23 @@ class ComponentPool {
 	 * reference
 	 */
 	template <typename Func>
-	void each(Func&& func) {
-		for (size_t i = 0; i < entities.size(); i++) {
-			func(entities[i], components[i]);
+	void each(Func func) {
+		for (size_t pos = 0; pos < count; ++pos) {
+			size_t page = pos / PageSize;
+			size_t slot = pos % PageSize;
+			func((*dense[page])[slot], (*data[page])[slot]);
 		}
 	}
+
+	private:
+	static constexpr uint32_t INVALID = std::numeric_limits<uint32_t>::max();
+	std::vector<uint32_t> sparse;
+	std::vector<std::unique_ptr<std::array<Entity, PageSize>>> dense;
+	std::vector<std::unique_ptr<std::array<T, PageSize>>> data;
+	size_t count = 0;
 };
 
 class Registry {
-	std::unordered_map<std::type_index, std::any> componentArray;
-	std::vector<std::function<void(Registry&, Entity)>> componentRemovers;
-	Entity entityIndex = 0;
-
 	public:
 	/**
 	 * @brief Creates a unique entity id
@@ -162,20 +210,9 @@ class Registry {
 	 * @param entity Entity to assign to
 	 * @param component Reference to the component to store
 	 * @returns A reference to the added component
-	 *
-	 * @warning Returned reference is only valid until another component of the same type is added
-	 * to the registry.
 	 */
 	template <typename T>
 	T& addComponent(Entity entity, const T& component) {
-		auto it = componentArray.find(typeid(T));
-
-		if (it == componentArray.end()) {
-			componentArray[typeid(T)] = ComponentPool<T>();
-			componentRemovers.push_back([](Registry& registry, Entity entity) {
-				registry.getComponents<T>().remove(entity);
-			});
-		}
 		return getComponents<T>().add(entity, component);
 	}
 
@@ -209,8 +246,6 @@ class Registry {
 	 * @tparam Components List of components to add
 	 * @param entity Entity to add them to
 	 * @returns An std::tuple containing references to the created components
-	 * @warning Returned reference is only valid until another component of the same type is added
-	 * to the registry
 	 */
 	template <typename... Components>
 	std::tuple<Components&...> addComponents(Entity entity) {
@@ -226,12 +261,31 @@ class Registry {
 	 */
 	template <typename T>
 	ComponentPool<T>& getComponents() {
-		auto it = componentArray.find(typeid(T));
-
-		if (it == componentArray.end()) {
-			throw std::runtime_error("Pool does not exist");
+		size_t id = componentTypeId<T>();
+		if (id >= componentArray.size())
+			componentArray.resize(id + 1);
+		if (!componentArray[id]) {
+			componentArray[id] = std::make_unique<ComponentPool<T>>();
+			componentRemovers.push_back([](Registry& registry, Entity entity) {
+				if (registry.hasComponent<T>(entity))
+					registry.getComponents<T>().remove(entity);
+			});
 		}
-		return std::any_cast<ComponentPool<T>&>(it->second);
+		return *static_cast<ComponentPool<T>*>(componentArray[id].get());
+	}
+
+	/**
+	 * @brief Retrieves a component reference for the associated entity
+	 *
+	 * @tparam T Type of component to retrieve
+	 * @param entity Entity to retrieve from
+	 * @returns The requested component
+	 * @throws std::runtime_error if the pool doesn't exist or if the entity does not possess the
+	 * entity
+	 */
+	template <typename T>
+	T& getComponent(Entity entity) {
+		return getComponents<T>().get(entity);
 	}
 
 	/**
@@ -265,25 +319,10 @@ class Registry {
 	 */
 	template <typename T>
 	bool hasComponent(Entity entity) {
-		auto it = componentArray.find(typeid(T));
-		if (it == componentArray.end()) {
+		size_t id = componentTypeId<T>();
+		if (id >= componentArray.size() || !componentArray[id])
 			return false;
-		}
-		return std::any_cast<ComponentPool<T>&>(it->second).contains(entity);
-	}
-
-	/**
-	 * @brief Retrieves a component reference for the associated entity
-	 *
-	 * @tparam T Type of component to retrieve
-	 * @param entity Entity to retrieve from
-	 * @returns The requested component
-	 * @throws std::runtime_error if the pool doesn't exist or if the entity does not possess the
-	 * entity
-	 */
-	template <typename T>
-	T& getComponent(Entity entity) {
-		return getComponents<T>().get(entity);
+		return static_cast<ComponentPool<T>*>(componentArray[id].get())->contains(entity);
 	}
 
 	/**
@@ -394,6 +433,42 @@ class Registry {
 				func(entity, primary, getComponent<Components>(entity)...);
 			}
 		});
+	}
+
+
+	Registry() = default;
+	Registry(const Registry& other) : entityIndex(other.entityIndex), typeToId(other.typeToId) {
+		componentArray.reserve(other.componentArray.size());
+		for (auto& pool : other.componentArray)
+			componentArray.push_back(pool ? pool->clone() : nullptr);
+		componentRemovers = other.componentRemovers;
+	}
+	Registry& operator=(const Registry& other) {
+		if (this == &other) return *this;
+		Registry tmp(other);
+		std::swap(componentArray, tmp.componentArray);
+		std::swap(componentRemovers, tmp.componentRemovers);
+		std::swap(typeToId, tmp.typeToId);
+		entityIndex = tmp.entityIndex;
+		return *this;
+	}
+	Registry(Registry&&) = default;
+	Registry& operator=(Registry&&) = default;
+	private:
+	std::vector<std::unique_ptr<IComponentPool>> componentArray;
+	std::vector<std::function<void(Registry&, Entity)>> componentRemovers;
+	Entity entityIndex = 0;
+	std::unordered_map<std::type_index, std::size_t> typeToId;
+
+	template <typename T>
+	std::size_t componentTypeId() {
+		auto it = typeToId.find(std::type_index(typeid(T)));
+		if (it != typeToId.end())
+			return it->second;
+		std::size_t id = componentArray.size();
+		typeToId[std::type_index(typeid(T))] = id;
+		componentArray.emplace_back(nullptr);
+		return id;
 	}
 };
 }  // namespace Garnet
