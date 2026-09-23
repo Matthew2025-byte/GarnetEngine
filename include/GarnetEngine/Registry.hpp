@@ -167,8 +167,8 @@ class ComponentPool : public IComponentPool {
 		for (size_t pos = 0; pos < count; ++pos) {
 			size_t page = pos / PageSize;
 			size_t slot = pos % PageSize;
-			const Entity& e = (*data[page])[slot];
-			func(e, &(*data[page])[slot]);
+			const Entity& e = (*dense[page])[slot];
+			func(e, (*data[page])[slot]);
 		}
 	}
 
