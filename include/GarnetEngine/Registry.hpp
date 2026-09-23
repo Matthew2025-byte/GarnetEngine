@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <cassert>
+#include <span>
 
 namespace Garnet {
 using Entity = uint32_t;
@@ -40,23 +41,6 @@ struct IComponentPool {
 template <typename T, size_t PageSize = 1024>
 class ComponentPool : public IComponentPool {
 	public:
-	ComponentPool() = default;
-	ComponentPool(const ComponentPool& other)
-		: sparse(other.sparse), count(other.count) {
-			dense.reserve(other.dense.size());
-			for (auto& page : other.dense)
-				dense.push_back(page ? std::make_unique<std::array<Entity, PageSize>>(*page) : nullptr);
-			data.reserve(other.data.size());
-			for (auto& page : other.data)
-				data.push_back(page ? std::make_unique<std::array<T, PageSize>>(*page) : nullptr);
-		}
-	ComponentPool(ComponentPool&&) = default;
-	ComponentPool& operator=(ComponentPool&&) = default;
-	ComponentPool& operator=(const ComponentPool&) = delete;
-
-	std::unique_ptr<IComponentPool> clone() const override {
-		return std::make_unique<ComponentPool<T, PageSize>>(*this);
-	}
 	/**
 	 * @brief Checks if an entity is in the component pool
 	 * @param entity Entity to check
@@ -78,6 +62,12 @@ class ComponentPool : public IComponentPool {
 		return (*data[pos / PageSize])[pos % PageSize];
 	}
 
+	T* tryGet(Entity e) {
+		if (e <= sparse.size()) return nullptr;
+		size_t pos = sparse[e];
+		if (pos == INVALID) return nullptr;
+		return &(*data[pos / PageSize])[pos % PageSize];
+	}
 	/**
 	 * @brief Adds a new component to an entity
 	 *
@@ -146,11 +136,14 @@ class ComponentPool : public IComponentPool {
 	 *
 	 * @return std::vector<Entity> of all assigned entities
 	 */
-	std::vector<Entity> getEntities() {
+	const std::vector<Entity> getEntities() const {
 		std::vector<Entity> result;
 		result.reserve(count);
-		for (size_t pos = 0; pos < count; ++pos) {
-			result.push_back((*dense[pos / PageSize])[pos % PageSize]);
+		for (size_t pos = 0; pos < count; pos += PageSize) {
+			size_t page = pos / PageSize;
+			size_t chunk = std::min(PageSize, count - pos);
+			auto& arr = *dense[page];
+			result.append_range(std::span(arr.data(), chunk));
 		}
 		return result;
 	}
@@ -174,14 +167,44 @@ class ComponentPool : public IComponentPool {
 		for (size_t pos = 0; pos < count; ++pos) {
 			size_t page = pos / PageSize;
 			size_t slot = pos % PageSize;
-			func((*dense[page])[slot], (*data[page])[slot]);
+			const Entity& e = (*data[page])[slot];
+			func(e, &(*data[page])[slot]);
 		}
+	}
+
+	ComponentPool() = default;
+	ComponentPool(const ComponentPool& other)
+		: sparse(other.sparse), count(other.count) {
+			dense.reserve(other.dense.size());
+			for (auto& page : other.dense)
+				dense.push_back(page ? std::make_unique<std::array<Entity, PageSize>>(*page) : nullptr);
+			data.reserve(other.data.size());
+			for (auto& page : other.data)
+				data.push_back(page ? std::make_unique<std::array<T, PageSize>>(*page) : nullptr);
+		}
+	ComponentPool(ComponentPool&&) = default;
+	ComponentPool& operator=(ComponentPool&&) = default;
+	ComponentPool& operator=(const ComponentPool&) = delete;
+
+	std::unique_ptr<IComponentPool> clone() const override {
+		return std::make_unique<ComponentPool<T, PageSize>>(*this);
 	}
 
 	private:
 	static constexpr uint32_t INVALID = std::numeric_limits<uint32_t>::max();
+	/**
+	 * @brief Contains entity locations in the dense array
+	 * @details Vector that contains every single entity in the pool, index equal to entity id and value reflecting position in the dense array
+	 */
 	std::vector<uint32_t> sparse;
+	/**
+	 * @brief Array of entity ids
+	 * @details Allows for O(1) lookup for entity ownership of a component
+	 */
 	std::vector<std::unique_ptr<std::array<Entity, PageSize>>> dense;
+	/**
+	 * @brief Array of components
+	 */
 	std::vector<std::unique_ptr<std::array<T, PageSize>>> data;
 	size_t count = 0;
 };
